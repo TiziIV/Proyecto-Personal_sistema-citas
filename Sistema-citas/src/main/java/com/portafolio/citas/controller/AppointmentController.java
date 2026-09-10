@@ -3,6 +3,10 @@ package com.portafolio.citas.controller;
 import com.portafolio.citas.dto.AppointmentRequestDTO;
 import com.portafolio.citas.dto.AppointmentResponseDTO;
 import com.portafolio.citas.service.AppointmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,7 +17,12 @@ import java.util.List;
 
 /**
  * Controlador REST para gestionar las peticiones HTTP relacionadas con las citas.
+ * 
+ * Uso de anotaciones de documentación (Swagger / OpenAPI):
+ * - Las anotaciones como @Tag, @Operation y @ApiResponse permiten enriquecer la documentación interactiva
+ *   de Swagger UI con descripciones claras, sin mezclar documentación con la lógica de negocio del servicio.
  */
+@Tag(name = "Citas", description = "Endpoints para la gestión y reserva de turnos")
 @RestController
 @RequestMapping("/api/appointments")
 @RequiredArgsConstructor
@@ -21,37 +30,42 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
-    /**
-     * Endpoint POST para crear una nueva cita.
-     * 
-     * ¿Por qué es crucial la anotación @Valid en el parámetro @RequestBody?
-     * - Sin la anotación @Valid, Spring Boot recibe el objeto DTO pero **ignora por completo** 
-     *   todas las anotaciones de validación declaradas en él (@NotBlank, @Email, @Future, etc.),
-     *   permitiendo que pasen datos vacíos o inválidos hacia la capa de servicio.
-     * - Al colocar @Valid, le indicamos a Spring que active el validador (Bean Validation / Hibernate Validator)
-     *   antes de ejecutar el método, y si hay errores, lanza automáticamente una excepción de tipo MethodArgumentNotValidException.
-     * 
-     * @param requestDTO Datos validados de la cita.
-     * @return ResponseEntity con la cita creada y status 201 CREATED.
-     */
+    @Operation(summary = "Crear una nueva cita", description = "Registra una nueva cita validando que la fecha sea futura y que el horario se encuentre disponible.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Cita creada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o error de validación"),
+        @ApiResponse(responseCode = "409", description = "Conflicto de horario (ya existe una cita activa en esa fecha y hora)")
+    })
     @PostMapping
     public ResponseEntity<AppointmentResponseDTO> createAppointment(@Valid @RequestBody AppointmentRequestDTO requestDTO) {
         AppointmentResponseDTO createdAppointment = appointmentService.createAppointment(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAppointment);
     }
 
+    @Operation(summary = "Listar todas las citas", description = "Retorna una lista con todas las citas registradas en el sistema.")
+    @ApiResponse(responseCode = "200", description = "Lista de citas obtenida exitosamente")
     @GetMapping
     public ResponseEntity<List<AppointmentResponseDTO>> getAllAppointments() {
         List<AppointmentResponseDTO> appointments = appointmentService.getAllAppointments();
         return ResponseEntity.ok(appointments);
     }
 
+    @Operation(summary = "Buscar cita por ID", description = "Busca y retorna los detalles de una cita específica según su identificador único.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cita encontrada exitosamente"),
+        @ApiResponse(responseCode = "400", description = "ID no encontrado o inválido")
+    })
     @GetMapping("/{id}")
     public ResponseEntity<AppointmentResponseDTO> getAppointmentById(@PathVariable Long id) {
         AppointmentResponseDTO appointment = appointmentService.getAppointmentById(id);
         return ResponseEntity.ok(appointment);
     }
 
+    @Operation(summary = "Cancelar una cita", description = "Actualiza el estado de una cita existente a CANCELLED liberando su horario.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "204", description = "Cita cancelada exitosamente (sin contenido de respuesta)"),
+        @ApiResponse(responseCode = "400", description = "Cita no encontrada o ya cancelada")
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelAppointment(@PathVariable Long id) {
         appointmentService.cancelAppointment(id);
