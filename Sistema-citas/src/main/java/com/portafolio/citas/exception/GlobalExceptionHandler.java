@@ -2,31 +2,54 @@ package com.portafolio.citas.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Manejador global de excepciones para toda la aplicación REST.
- * 
- * ¿Cómo funciona @RestControllerAdvice y por qué es una buena práctica?
- * - @RestControllerAdvice actúa como un interceptor global (AOP) para todos los controladores (@RestController).
- * - Cuando cualquier servicio o controlador lanza una excepción no manejada, este componente la intercepta,
- *   evitando que la aplicación devuelva un genérico y feo error HTTP 500 (Internal Server Error) con stacktrace crudo al frontend.
- * - Permite transformar las excepciones de negocio en respuestas HTTP limpias, estructuradas y con códigos de error semánticos (ej. 409 Conflict, 400 Bad Request).
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Intercepta la excepción de negocio AppointmentConflictException cuando ocurre un conflicto de horario.
+     * Intercepta la excepción MethodArgumentNotValidException que se dispara automáticamente
+     * cuando falla alguna validación de un DTO anotado con @Valid.
      * 
-     * @param ex La excepción capturada.
-     * @return ResponseEntity con un cuerpo JSON estructurado y código HTTP 409 CONFLICT.
+     * ¿Cómo ayuda esto al desarrollador Frontend?
+     * - Extrae cada error de validación por campo (FieldError) y construye un mapa limpio 
+     *   donde la clave es el nombre del atributo del formulario (ej. "clientEmail") y el valor
+     *   es el mensaje descriptivo en español (ej. "Debe proporcionar un email valido").
+     * - De esta forma, el Frontend puede iterar fácilmente sobre este diccionario JSON y pintar 
+     *   los mensajes de error directamente debajo de cada input correspondiente en el formulario web o móvil.
+     * 
+     * @param ex Excepción de validación de argumentos.
+     * @return ResponseEntity con un Map de errores por campo y código HTTP 400 BAD REQUEST.
      */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new HashMap<>();
+        
+        // Recorremos todos los errores de validación ocurridos en los campos del DTO
+        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+            fieldErrors.put(error.getField(), error.getDefaultMessage());
+        }
+
+        Map<String, Object> errorBody = new LinkedHashMap<>();
+        errorBody.put("timestamp", LocalDateTime.now());
+        errorBody.put("status", HttpStatus.BAD_REQUEST.value());
+        errorBody.put("error", "Validation Failed");
+        errorBody.put("messages", fieldErrors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorBody);
+    }
+
     @ExceptionHandler(AppointmentConflictException.class)
     public ResponseEntity<Map<String, Object>> handleAppointmentConflictException(AppointmentConflictException ex) {
         Map<String, Object> errorBody = new LinkedHashMap<>();
@@ -38,10 +61,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorBody);
     }
 
-    /**
-     * Manejador genérico opcional para IllegalArgumentException (ej. validaciones de fechas pasadas o IDs no encontrados).
-     * Retorna HTTP 400 BAD_REQUEST.
-     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         Map<String, Object> errorBody = new LinkedHashMap<>();
