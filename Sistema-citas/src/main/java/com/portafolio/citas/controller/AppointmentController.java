@@ -17,10 +17,6 @@ import java.util.List;
 
 /**
  * Controlador REST para gestionar las peticiones HTTP relacionadas con las citas.
- * 
- * Uso de anotaciones de documentación (Swagger / OpenAPI):
- * - Las anotaciones como @Tag, @Operation y @ApiResponse permiten enriquecer la documentación interactiva
- *   de Swagger UI con descripciones claras, sin mezclar documentación con la lógica de negocio del servicio.
  */
 @Tag(name = "Citas", description = "Endpoints para la gestión y reserva de turnos")
 @RestController
@@ -53,7 +49,8 @@ public class AppointmentController {
     @Operation(summary = "Buscar cita por ID", description = "Busca y retorna los detalles de una cita específica según su identificador único.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Cita encontrada exitosamente"),
-        @ApiResponse(responseCode = "400", description = "ID no encontrado o inválido")
+        @ApiResponse(responseCode = "404", description = "Cita no encontrada con el ID proporcionado"),
+        @ApiResponse(responseCode = "400", description = "ID inválido")
     })
     @GetMapping("/{id}")
     public ResponseEntity<AppointmentResponseDTO> getAppointmentById(@PathVariable Long id) {
@@ -61,10 +58,11 @@ public class AppointmentController {
         return ResponseEntity.ok(appointment);
     }
 
-    @Operation(summary = "Cancelar una cita", description = "Actualiza el estado de una cita existente a CANCELLED liberando su horario.")
+    @Operation(summary = "Cancelar una cita", description = "Actualiza el estado de una cita existente a CANCELLED (Soft Delete) liberando su horario.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Cita cancelada exitosamente (sin contenido de respuesta)"),
-        @ApiResponse(responseCode = "400", description = "Cita no encontrada o ya cancelada")
+        @ApiResponse(responseCode = "404", description = "Cita no encontrada con el ID proporcionado"),
+        @ApiResponse(responseCode = "400", description = "Cita ya cancelada o ID inválido")
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelAppointment(@PathVariable Long id) {

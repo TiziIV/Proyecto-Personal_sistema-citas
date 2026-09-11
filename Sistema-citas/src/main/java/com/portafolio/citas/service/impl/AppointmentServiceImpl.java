@@ -3,6 +3,7 @@ package com.portafolio.citas.service.impl;
 import com.portafolio.citas.dto.AppointmentRequestDTO;
 import com.portafolio.citas.dto.AppointmentResponseDTO;
 import com.portafolio.citas.exception.AppointmentConflictException;
+import com.portafolio.citas.exception.ResourceNotFoundException;
 import com.portafolio.citas.model.entity.Appointment;
 import com.portafolio.citas.model.entity.AppointmentStatus;
 import com.portafolio.citas.repository.AppointmentRepository;
@@ -17,17 +18,11 @@ import java.util.stream.Collectors;
 
 /**
  * Implementación de la capa de servicio (Business Logic Layer) para la gestión de citas.
- * 
- * Anotaciones utilizadas:
- * - @Service: Indica a Spring que esta clase es un componente de servicio bean gestionado en el contenedor IoC.
- * - @RequiredArgsConstructor: Anotación de Lombok que genera un constructor con todos los campos 'final',
- *   permitiendo la inyección de dependencias por constructor de forma limpia y recomendada (sin necesidad de @Autowired).
  */
 @Service
 @RequiredArgsConstructor
 public class AppointmentServiceImpl implements AppointmentService {
 
-    // Repositorio inyectado de forma segura mediante inyección por constructor (gracias a @RequiredArgsConstructor)
     private final AppointmentRepository appointmentRepository;
 
     @Override
@@ -40,7 +35,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         // 2. Validar disponibilidad de horario consultando el repositorio
-        // Verificamos si ya existe una cita en esa misma fecha/hora cuyo estado NO sea CANCELLED.
         boolean isConflict = appointmentRepository.existsByAppointmentDateTimeAndStatusNot(
                 requestDTO.getAppointmentDateTime(), 
                 AppointmentStatus.CANCELLED
@@ -57,7 +51,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .clientName(requestDTO.getClientName())
                 .clientEmail(requestDTO.getClientEmail())
                 .appointmentDateTime(requestDTO.getAppointmentDateTime())
-                .status(AppointmentStatus.PENDING) // Por defecto, toda nueva cita nace con estado PENDING
+                .status(AppointmentStatus.PENDING)
                 .notes(requestDTO.getNotes())
                 .build();
 
@@ -71,7 +65,6 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional(readOnly = true)
     public List<AppointmentResponseDTO> getAllAppointments() {
-        // Consultar todas las entidades y transformarlas (mapearlas) a una lista de DTOs de respuesta
         return appointmentRepository.findAll().stream()
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
@@ -80,9 +73,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional(readOnly = true)
     public AppointmentResponseDTO getAppointmentById(Long id) {
-        // Buscar la cita por ID o lanzar una excepción si no existe
+        // Buscar la cita por ID o lanzar ResourceNotFoundException si no existe (retornará HTTP 404)
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró la cita con el ID proporcionado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró la cita con el ID: " + id));
         
         return mapToResponseDTO(appointment);
     }
@@ -90,16 +83,24 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO cancelAppointment(Long id) {
-        // Buscar la cita existente
+        // Buscar la cita existente (lanzando ResourceNotFoundException si no existe)
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró la cita con el ID proporcionado para cancelar: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró la cita con el ID para cancelar: " + id));
 
-        // Validar si ya está cancelada opcionalmente o proceder al cambio de estado
+        // Validar si ya está cancelada
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new IllegalStateException("La cita ya se encuentra cancelada.");
         }
 
-        // Actualizar el estado a CANCELLED (liberando el horario en futuras validaciones)
+        /*
+         * ¿Qué es un Soft Delete (Borrado Lógico) y por qué es mejor que borrar físicamente el registro?
+         * - En lugar de eliminar la fila de la base de datos con un DELETE físico (que destruye historial),
+         *   el Soft Delete consiste en actualizar un campo de estado (en este caso, cambiar el status a CANCELLED).
+         * - Beneficios:
+         *   1. Preserva la trazabilidad, auditoría e historial completo de las reservas.
+         *   2. Permite análisis de datos, reportes estadísticos y cumplimiento legal.
+         *   3. Evita romper integridad referencial con otras tablas si existieran relaciones.
+         */
         appointment.setStatus(AppointmentStatus.CANCELLED);
         
         Appointment updatedAppointment = appointmentRepository.save(appointment);
@@ -107,13 +108,6 @@ public class AppointmentServiceImpl implements AppointmentService {
         return mapToResponseDTO(updatedAppointment);
     }
 
-    /**
-     * Método auxiliar privado para mapear una Entidad Appointment a un AppointmentResponseDTO.
-     * Centraliza la conversión para evitar código duplicado (DRY - Don't Repeat Yourself).
-     * 
-     * @param appointment Entidad JPA.
-     * @return AppointmentResponseDTO mapeado.
-     */
     private AppointmentResponseDTO mapToResponseDTO(Appointment appointment) {
         return AppointmentResponseDTO.builder()
                 .id(appointment.getId())
