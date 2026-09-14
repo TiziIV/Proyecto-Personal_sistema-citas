@@ -1,0 +1,25 @@
+version: '3.8'
+
+# Definición de servicios para la infraestructura del proyecto Sistema-citas
+services:
+  
+  # Contenedor para la base de datos relacional PostgreSQL
+  postgres-db:
+    image: postgres:16-alpine # Imagen oficial ligera de PostgreSQL versión 16
+    container_name: sistema-citas-postgres
+    environment:
+      POSTGRES_DB: citasdb             # Nombre de la base de datos que se creará automáticamente al iniciar el contenedor
+      POSTGRES_USER: postgres          # Usuario administrador por defecto para la conexión
+      POSTGRES_PASSWORD: postgrespassword # Contraseña de seguridad para el usuario postgres
+    ports:
+      - "5433:5432"                    # Mapeo de puertos: expone el puerto 5432 del contenedor hacia el puerto 5432 de la máquina host
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Volumen persistente para asegurar que los datos no se pierdan al reiniciar o detener el contenedor
+    restart: unless-stopped            # Política de reinicio: reinicia el contenedor automáticamente si se detiene (a menos que se detenga manualmente)
+
+# Definición de volúmenes persistentes gestionados por Docker
+# Ventaja de aislar la BD con Docker: Permite replicar exactamente el mismo motor de base de datos de producción en cualquier entorno local,
+# evitando conflictos de versiones de software, facilitando respaldos y manteniendo la máquina limpia.
+volumes:
+  postgres_data:
+    driver: local

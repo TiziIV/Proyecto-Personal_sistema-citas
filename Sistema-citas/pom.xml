@@ -43,10 +43,21 @@
             <version>2.5.0</version>
         </dependency>
 
+        <!-- Driver JDBC oficial de PostgreSQL 
+             Permite a Spring Boot y Hibernate comunicarse e interactuar con el contenedor de PostgreSQL. -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Base de datos H2 en memoria 
+             Configurada con scope 'test' para que solo esté disponible al ejecutar pruebas unitarias o de integración,
+             manteniendo el entorno de desarrollo y producción limpio con PostgreSQL. -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
