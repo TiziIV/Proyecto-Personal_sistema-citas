@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * 
  * ¿Por qué utilizamos este DTO de respuesta?
  * - Define exactamente qué información es seguro y útil mostrar al usuario o consumidor de la API.
- * - Incluye campos generados por el servidor (como el ID autoincremental y el status inicial PENDING)
+ * - Incluye campos generados por el servidor (como el ID autoincremental, el status inicial PENDING y los datos del usuario dueño)
  *   que el cliente no debe enviar en la petición de creación, pero sí necesita conocer como resultado.
  */
 @Data
@@ -51,4 +51,14 @@ public class AppointmentResponseDTO {
      * Notas adicionales asociadas a la cita.
      */
     private String notes;
+
+    /**
+     * ID del usuario propietario de la reserva.
+     */
+    private Long userId;
+
+    /**
+     * Email del usuario propietario de la reserva.
+     */
+    private String userEmail;
 }

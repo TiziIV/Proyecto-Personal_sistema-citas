@@ -1,4 +1,4 @@
-package com.portafolio.citas.service;
+package com.portafolio.citas.service.impl;
 
 import com.portafolio.citas.dto.AppointmentRequestDTO;
 import com.portafolio.citas.dto.AppointmentResponseDTO;
@@ -6,8 +6,10 @@ import com.portafolio.citas.exception.AppointmentConflictException;
 import com.portafolio.citas.exception.ResourceNotFoundException;
 import com.portafolio.citas.model.entity.Appointment;
 import com.portafolio.citas.model.entity.AppointmentStatus;
+import com.portafolio.citas.model.entity.User;
+import com.portafolio.citas.model.enums.Role;
 import com.portafolio.citas.repository.AppointmentRepository;
-import com.portafolio.citas.service.impl.AppointmentServiceImpl;
+import com.portafolio.citas.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,21 +27,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * Pruebas unitarias para la clase AppointmentServiceImpl.
- * 
- * Conceptos clave explicados para desarrolladores Junior:
- * 1. ¿Qué es un Mock y por qué usamos Mockito en lugar de una base de datos real?
- *    - Un Mock es un objeto simulado que imita el comportamiento de objetos reales (en este caso, AppointmentRepository).
- *    - Usar Mockito nos permite aislar la lógica de negocio del servicio, evitando depender de bases de datos externas (como H2 o MySQL),
- *      conexiones de red o servicios lentos. Las pruebas unitarias corren extremadamente rápido y son totalmente deterministas.
- * 
- * 2. Patrón AAA (Arrange, Act, Assert / Dado, Cuando, Entonces):
- *    - Arrange (Dado): Preparamos los datos de entrada, configuramos los mocks y definimos qué deben retornar cuando sean invocados.
- *    - Act (Cuando): Ejecutamos el método del servicio que queremos probar.
- *    - Assert (Entonces): Verificamos mediante afirmaciones (assertions) que el resultado sea el esperado.
- * 
- * 3. ¿Para qué sirve verify(...) de Mockito?
- *    - Sirve para comprobar que un método específico de un mock fue llamado (o NO fue llamado) 
- *      cierto número de veces (ej. verificar que repository.save(...) nunca se ejecute si hay un conflicto de negocio).
  */
 @ExtendWith(MockitoExtension.class)
 class AppointmentServiceImplTest {
@@ -47,74 +34,96 @@ class AppointmentServiceImplTest {
     @Mock
     private AppointmentRepository appointmentRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private AppointmentServiceImpl appointmentService;
 
     @Test
-    @DisplayName("createAppointment_Success: Debe guardar y retornar el DTO cuando el horario está disponible")
+    @DisplayName("createAppointment_Success: Debe guardar y retornar el DTO cuando el horario está disponible y el usuario existe")
     void createAppointment_Success() {
         // Arrange (Dado)
+        String userEmail = "juan@example.com";
+        User mockUser = User.builder()
+                .id(1L)
+                .fullName("Juan Pérez")
+                .email(userEmail)
+                .role(Role.ROLE_CLIENT)
+                .build();
+
         LocalDateTime futureDateTime = LocalDateTime.now().plusDays(1);
         AppointmentRequestDTO requestDTO = AppointmentRequestDTO.builder()
                 .clientName("Juan Pérez")
-                .clientEmail("juan@example.com")
+                .clientEmail(userEmail)
                 .appointmentDateTime(futureDateTime)
                 .notes("Revisión general")
                 .build();
 
-        // Simulamos que NO existe conflicto en ese horario (retorna false)
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
         when(appointmentRepository.existsByAppointmentDateTimeAndStatusNot(any(LocalDateTime.class), eq(AppointmentStatus.CANCELLED)))
                 .thenReturn(false);
 
         Appointment savedAppointment = Appointment.builder()
                 .id(1L)
                 .clientName("Juan Pérez")
-                .clientEmail("juan@example.com")
+                .clientEmail(userEmail)
                 .appointmentDateTime(futureDateTime)
                 .status(AppointmentStatus.PENDING)
                 .notes("Revisión general")
+                .user(mockUser)
                 .build();
 
         when(appointmentRepository.save(any(Appointment.class))).thenReturn(savedAppointment);
 
         // Act (Cuando)
-        AppointmentResponseDTO responseDTO = appointmentService.createAppointment(requestDTO);
+        AppointmentResponseDTO responseDTO = appointmentService.createAppointment(requestDTO, userEmail);
 
         // Assert (Entonces)
         assertNotNull(responseDTO);
         assertEquals(1L, responseDTO.getId());
         assertEquals("Juan Pérez", responseDTO.getClientName());
         assertEquals(AppointmentStatus.PENDING, responseDTO.getStatus());
+        assertEquals(1L, responseDTO.getUserId());
+        assertEquals(userEmail, responseDTO.getUserEmail());
 
-        // Verificamos que se consultó la disponibilidad y se guardó en el repositorio exactamente 1 vez
+        verify(userRepository, times(1)).findByEmail(userEmail);
         verify(appointmentRepository, times(1)).existsByAppointmentDateTimeAndStatusNot(any(LocalDateTime.class), eq(AppointmentStatus.CANCELLED));
         verify(appointmentRepository, times(1)).save(any(Appointment.class));
     }
 
     @Test
-    @DisplayName("createAppointment_ThrowsConflictException_WhenSlotAlreadyTaken: Debe lanzar AppointmentConflictException y no guardar si el horario está ocupado")
+    @DisplayName("createAppointment_ThrowsConflictException_WhenSlotAlreadyTaken: Debe lanzar AppointmentConflictException si el horario está ocupado")
     void createAppointment_ThrowsConflictException_WhenSlotAlreadyTaken() {
         // Arrange (Dado)
+        String userEmail = "maria@example.com";
+        User mockUser = User.builder()
+                .id(2L)
+                .fullName("María Gómez")
+                .email(userEmail)
+                .role(Role.ROLE_CLIENT)
+                .build();
+
         LocalDateTime futureDateTime = LocalDateTime.now().plusDays(1);
         AppointmentRequestDTO requestDTO = AppointmentRequestDTO.builder()
                 .clientName("María Gómez")
-                .clientEmail("maria@example.com")
+                .clientEmail(userEmail)
                 .appointmentDateTime(futureDateTime)
                 .build();
 
-        // Simulamos que SÍ existe conflicto en ese horario (retorna true)
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
         when(appointmentRepository.existsByAppointmentDateTimeAndStatusNot(any(LocalDateTime.class), eq(AppointmentStatus.CANCELLED)))
                 .thenReturn(true);
 
         // Act & Assert (Cuando / Entonces)
         AppointmentConflictException exception = assertThrows(
                 AppointmentConflictException.class,
-                () -> appointmentService.createAppointment(requestDTO)
+                () -> appointmentService.createAppointment(requestDTO, userEmail)
         );
 
         assertTrue(exception.getMessage().contains("Ya existe una cita activa"));
 
-        // Verificamos que NUNCA se llamó al método save(...) del repositorio debido al conflicto de negocio
+        verify(userRepository, times(1)).findByEmail(userEmail);
         verify(appointmentRepository, never()).save(any(Appointment.class));
     }
 
@@ -132,8 +141,6 @@ class AppointmentServiceImplTest {
         );
 
         assertTrue(exception.getMessage().contains("No se encontró la cita con el ID: " + nonExistentId));
-        
-        // Verificamos que se intentó buscar por ID
         verify(appointmentRepository, times(1)).findById(nonExistentId);
     }
 
@@ -142,12 +149,14 @@ class AppointmentServiceImplTest {
     void cancelAppointment_Success() {
         // Arrange (Dado)
         Long appointmentId = 1L;
+        User mockUser = User.builder().id(1L).email("carlos@example.com").build();
         Appointment existingAppointment = Appointment.builder()
                 .id(appointmentId)
                 .clientName("Carlos Ruiz")
                 .clientEmail("carlos@example.com")
                 .appointmentDateTime(LocalDateTime.now().plusDays(2))
                 .status(AppointmentStatus.PENDING)
+                .user(mockUser)
                 .build();
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
@@ -160,7 +169,6 @@ class AppointmentServiceImplTest {
         assertNotNull(responseDTO);
         assertEquals(AppointmentStatus.CANCELLED, responseDTO.getStatus());
 
-        // Verificamos que se buscó por ID y se guardó la entidad actualizada con el nuevo estado
         verify(appointmentRepository, times(1)).findById(appointmentId);
         verify(appointmentRepository, times(1)).save(any(Appointment.class));
     }

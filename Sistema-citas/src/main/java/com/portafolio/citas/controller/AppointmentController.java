@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,24 +27,39 @@ public class AppointmentController {
 
     private final AppointmentService appointmentService;
 
-    @Operation(summary = "Crear una nueva cita", description = "Registra una nueva cita validando que la fecha sea futura y que el horario se encuentre disponible.")
+    @Operation(summary = "Crear una nueva cita", description = "Registra una nueva cita vinculándola automáticamente al usuario autenticado vía Token JWT.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Cita creada exitosamente"),
         @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos o error de validación"),
+        @ApiResponse(responseCode = "401", description = "No autorizado (Token JWT faltante o inválido)"),
         @ApiResponse(responseCode = "409", description = "Conflicto de horario (ya existe una cita activa en esa fecha y hora)")
     })
     @PostMapping
-    public ResponseEntity<AppointmentResponseDTO> createAppointment(@Valid @RequestBody AppointmentRequestDTO requestDTO) {
-        AppointmentResponseDTO createdAppointment = appointmentService.createAppointment(requestDTO);
+    public ResponseEntity<AppointmentResponseDTO> createAppointment(
+            @Valid @RequestBody AppointmentRequestDTO requestDTO,
+            Authentication authentication
+    ) {
+        // Obtenemos el email del usuario logueado directamente del contexto de seguridad (Token JWT)
+        String userEmail = authentication.getName();
+        AppointmentResponseDTO createdAppointment = appointmentService.createAppointment(requestDTO, userEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAppointment);
     }
 
-    @Operation(summary = "Listar todas las citas", description = "Retorna una lista con todas las citas registradas en el sistema.")
+    @Operation(summary = "Listar todas las citas", description = "Retorna una lista con todas las citas registradas en el sistema (Uso administrativo).")
     @ApiResponse(responseCode = "200", description = "Lista de citas obtenida exitosamente")
     @GetMapping
     public ResponseEntity<List<AppointmentResponseDTO>> getAllAppointments() {
         List<AppointmentResponseDTO> appointments = appointmentService.getAllAppointments();
         return ResponseEntity.ok(appointments);
+    }
+
+    @Operation(summary = "Listar mis citas", description = "Retorna exclusivamente las citas asociadas al usuario autenticado.")
+    @ApiResponse(responseCode = "200", description = "Lista de citas del usuario obtenida exitosamente")
+    @GetMapping("/my-appointments")
+    public ResponseEntity<List<AppointmentResponseDTO>> getMyAppointments(Authentication authentication) {
+        String userEmail = authentication.getName();
+        List<AppointmentResponseDTO> myAppointments = appointmentService.getMyAppointments(userEmail);
+        return ResponseEntity.ok(myAppointments);
     }
 
     @Operation(summary = "Buscar cita por ID", description = "Busca y retorna los detalles de una cita específica según su identificador único.")

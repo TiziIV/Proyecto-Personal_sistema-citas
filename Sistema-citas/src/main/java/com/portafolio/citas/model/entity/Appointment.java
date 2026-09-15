@@ -43,4 +43,18 @@ public class Appointment {
 
     // Notas adicionales opcionales o motivos específicos de la cita (puede ser nulo)
     private String notes;
+
+    /**
+     * Usuario propietario de la reserva.
+     * 
+     * ¿Por qué usamos FetchType.LAZY y cuál es la importancia de la clave foránea user_id?
+     * 1. FetchType.LAZY (Carga perezosa): Le indica a Hibernate que no cargue los datos completos del usuario 
+     *    de la base de datos cada vez que consultemos una cita, a menos que se invoque explícitamente `appointment.getUser()`. 
+     *    Esto optimiza drásticamente el rendimiento y evita consultas innecesarias (problema de N+1 queries).
+     * 2. Clave foránea (user_id): Establece una relación relacional estricta en la base de datos entre la tabla appointments y users,
+     *    garantizando la integridad referencial y permitiendo auditar y vincular cada turno al usuario autenticado que lo creó.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

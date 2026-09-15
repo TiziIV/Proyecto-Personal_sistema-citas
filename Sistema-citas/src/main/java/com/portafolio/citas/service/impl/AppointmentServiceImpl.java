@@ -6,9 +6,12 @@ import com.portafolio.citas.exception.AppointmentConflictException;
 import com.portafolio.citas.exception.ResourceNotFoundException;
 import com.portafolio.citas.model.entity.Appointment;
 import com.portafolio.citas.model.entity.AppointmentStatus;
+import com.portafolio.citas.model.entity.User;
 import com.portafolio.citas.repository.AppointmentRepository;
+import com.portafolio.citas.repository.UserRepository;
 import com.portafolio.citas.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,17 +27,22 @@ import java.util.stream.Collectors;
 public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional
-    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO requestDTO) {
+    public AppointmentResponseDTO createAppointment(AppointmentRequestDTO requestDTO, String userEmail) {
         
-        // 1. Validar que la fecha y hora de la cita sea en el futuro
+        // 1. Buscar al usuario autenticado por su email (extraído del token JWT)
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario autenticado no encontrado: " + userEmail));
+
+        // 2. Validar que la fecha y hora de la cita sea en el futuro
         if (requestDTO.getAppointmentDateTime() == null || requestDTO.getAppointmentDateTime().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("La fecha y hora de la cita debe ser posterior al momento actual.");
         }
 
-        // 2. Validar disponibilidad de horario consultando el repositorio
+        // 3. Validar disponibilidad de horario consultando el repositorio
         boolean isConflict = appointmentRepository.existsByAppointmentDateTimeAndStatusNot(
                 requestDTO.getAppointmentDateTime(), 
                 AppointmentStatus.CANCELLED
@@ -46,19 +54,29 @@ public class AppointmentServiceImpl implements AppointmentService {
             );
         }
 
-        // 3. Mapear atributos del DTO de entrada a la Entidad JPA
+        // 4. Si clientName o clientEmail vienen vacíos en el DTO, autocompletarlos con los datos del usuario logueado
+        String clientName = (requestDTO.getClientName() != null && !requestDTO.getClientName().isBlank()) 
+                ? requestDTO.getClientName() 
+                : user.getFullName();
+
+        String clientEmail = (requestDTO.getClientEmail() != null && !requestDTO.getClientEmail().isBlank()) 
+                ? requestDTO.getClientEmail() 
+                : user.getEmail();
+
+        // 5. Mapear atributos del DTO de entrada a la Entidad JPA vinculando el usuario autenticado
         Appointment appointment = Appointment.builder()
-                .clientName(requestDTO.getClientName())
-                .clientEmail(requestDTO.getClientEmail())
+                .clientName(clientName)
+                .clientEmail(clientEmail)
                 .appointmentDateTime(requestDTO.getAppointmentDateTime())
                 .status(AppointmentStatus.PENDING)
                 .notes(requestDTO.getNotes())
+                .user(user) // Vinculación automática e impedimento de suplantación de identidad
                 .build();
 
-        // 4. Guardar la entidad en la base de datos a través del repositorio
+        // 6. Guardar la entidad en la base de datos
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        // 5. Mapear la entidad guardada de vuelta al DTO de respuesta y retornarla
+        // 7. Mapear y retornar el DTO de respuesta
         return mapToResponseDTO(savedAppointment);
     }
 
@@ -72,8 +90,18 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<AppointmentResponseDTO> getMyAppointments(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario autenticado no encontrado: " + userEmail));
+
+        return appointmentRepository.findByUser(user).stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public AppointmentResponseDTO getAppointmentById(Long id) {
-        // Buscar la cita por ID o lanzar ResourceNotFoundException si no existe (retornará HTTP 404)
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró la cita con el ID: " + id));
         
@@ -83,24 +111,13 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     @Transactional
     public AppointmentResponseDTO cancelAppointment(Long id) {
-        // Buscar la cita existente (lanzando ResourceNotFoundException si no existe)
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró la cita con el ID para cancelar: " + id));
 
-        // Validar si ya está cancelada
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new IllegalStateException("La cita ya se encuentra cancelada.");
         }
 
-        /*
-         * ¿Qué es un Soft Delete (Borrado Lógico) y por qué es mejor que borrar físicamente el registro?
-         * - En lugar de eliminar la fila de la base de datos con un DELETE físico (que destruye historial),
-         *   el Soft Delete consiste en actualizar un campo de estado (en este caso, cambiar el status a CANCELLED).
-         * - Beneficios:
-         *   1. Preserva la trazabilidad, auditoría e historial completo de las reservas.
-         *   2. Permite análisis de datos, reportes estadísticos y cumplimiento legal.
-         *   3. Evita romper integridad referencial con otras tablas si existieran relaciones.
-         */
         appointment.setStatus(AppointmentStatus.CANCELLED);
         
         Appointment updatedAppointment = appointmentRepository.save(appointment);
@@ -116,6 +133,8 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDateTime(appointment.getAppointmentDateTime())
                 .status(appointment.getStatus())
                 .notes(appointment.getNotes())
+                .userId(appointment.getUser() != null ? appointment.getUser().getId() : null)
+                .userEmail(appointment.getUser() != null ? appointment.getUser().getEmail() : null)
                 .build();
     }
 }
