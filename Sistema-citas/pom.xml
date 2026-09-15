@@ -37,23 +37,50 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- Spring Boot Starter Security 
+             Proporciona la infraestructura de autenticación, codificación de contraseñas (PasswordEncoder) 
+             y control de acceso basado en filtros (SecurityFilterChain). -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- JJWT (Java JWT) versión 0.12.5 
+             Librería estándar para la creación, firma y validación de JSON Web Tokens (JWT).
+             En una arquitectura Stateless (sin sesiones de servidor), el token JWT viaja en las cabeceras HTTP 
+             y contiene toda la información de identidad y roles del usuario de forma cifrada/firmada. -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.5</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.5.0</version>
         </dependency>
 
-        <!-- Driver JDBC oficial de PostgreSQL 
-             Permite a Spring Boot y Hibernate comunicarse e interactuar con el contenedor de PostgreSQL. -->
+        <!-- Driver JDBC oficial de PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Base de datos H2 en memoria 
-             Configurada con scope 'test' para que solo esté disponible al ejecutar pruebas unitarias o de integración,
-             manteniendo el entorno de desarrollo y producción limpio con PostgreSQL. -->
+        <!-- Base de datos H2 en memoria (exclusiva para tests) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
