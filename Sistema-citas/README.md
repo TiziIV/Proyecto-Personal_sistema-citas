@@ -3,90 +3,113 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
   <img src="https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot 3.3.4" />
-  <img src="https://img.shields.io/badge/Maven-Coded-red?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-blue?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL 16" />
+  <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Compose" />
+  <img src="https://img.shields.io/badge/Spring%20Security-6-green?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security 6" />
+  <img src="https://img.shields.io/badge/JWT-JJWT%200.12-yellow?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT" />
   <img src="https://img.shields.io/badge/JUnit%205-Tested-blue?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit 5" />
-  <img src="https://img.shields.io/badge/OpenAPI-Swagger-yellow?style=for-the-badge&logo=swagger&logoColor=white" alt="OpenAPI" />
-  <img src="https://img.shields.io/badge/H2-Database-blueviolet?style=for-the-badge&logo=h2&logoColor=white" alt="H2 Database" />
+  <img src="https://img.shields.io/badge/OpenAPI-Swagger-orange?style=for-the-badge&logo=swagger&logoColor=white" alt="OpenAPI" />
 </p>
 
 ---
 
 ## 📋 Descripción del Proyecto
 
-**Sistema de Reservas y Citas API** es una solución backend robusta, moderna y escalable desarrollada en **Java 21** y **Spring Boot 3.3.4**. Su objetivo principal es gestionar la programación y control de citas o turnos, previniendo solapamientos de horarios mediante validaciones de negocio en tiempo real, manejo avanzado de excepciones y arquitectura limpia orientada a servicios profesionales.
+**Sistema de Reservas y Citas API** es una solución backend robusta, moderna y lista para producción desarrollada en **Java 21** y **Spring Boot 3.3.4**. En su **Fase 2**, el sistema incorpora persistencia relacional robusta con **PostgreSQL** mediante contenedores **Docker**, y un sistema completo de autenticación y autorización **Stateless** basado en **JSON Web Tokens (JWT)** y **Spring Security 6**.
 
 ---
 
-## 🏗️ Decisiones Técnicas y Arquitectura
+## 🔒 Arquitectura de Seguridad y Autenticación (JWT)
 
-El proyecto está diseñado bajo una **Arquitectura por Capas** estricta, garantizando separación de incumbencias (SoC), mantenibilidad y testabilidad:
+El sistema implementa un modelo de seguridad avanzado:
+1. **Autenticación Stateless**: Sin sesiones en servidor. Cada petición requiere un token JWT válido enviado en la cabecera HTTP `Authorization: Bearer <token>`.
+2. **Firma Criptográfica (JJWT 0.12.5)**: Los tokens son generados y validados mediante HMAC-SHA256, garantizando la integridad de la identidad y roles del usuario.
+3. **Gestión de Roles y Autorización**:
+   - `ROLE_CLIENT`: Puede registrarse, iniciar sesión, consultar citas y crear nuevas reservas.
+   - `ROLE_ADMIN`: Posee privilegios elevados, incluyendo la cancelación lógica (*Soft Delete*) de citas.
+4. **Resolución de Dependencias Circulares**: La configuración de Spring Security fue desacoplada introduciendo `ApplicationSecurityConfig`, separando los beans de infraestructura de autenticación de las reglas HTTP en `SecurityConfig`.
 
-1. **Capa Controller (`controller`)**: Expone los endpoints RESTful (`@RestController`), delegando la lógica y aplicando validación de entrada con Bean Validation (`@Valid`).
-2. **Capa Service (`service` / `service.impl`)**: Contiene las reglas de negocio, validaciones de fechas futuras, control de disponibilidad y mapeo entre DTOs y Entidades.
-3. **Capa Repository (`repository`)**: Extiende de `JpaRepository` aprovechando consultas derivadas automáticas (*Derived Queries*) para la detección de conflictos de turnos.
-4. **Capa Model / Entity (`model.entity`)**: Entidades JPA (`@Entity`) con persistencia relacional y enums para el ciclo de vida de las citas (`PENDING`, `CONFIRMED`, `CANCELLED`).
-5. **DTOs (`dto`)**: Objetos de transferencia de datos de entrada (`AppointmentRequestDTO`) y salida (`AppointmentResponseDTO`) para desacoplar la API de la base de datos y prevenir vulnerabilidades de asignación masiva.
-6. **Manejo de Excepciones (`exception`)**: Excepciones de negocio personalizadas (`AppointmentConflictException`, `ResourceNotFoundException`) interceptadas globalmente mediante `@RestControllerAdvice` para retornar códigos HTTP semánticos y estructurados.
+---
 
-### 💡 Características Destacadas de Negocio y Persistencia:
-- **Prevención de Solapamientos**: Mediante la consulta derivada `existsByAppointmentDateTimeAndStatusNot`, el sistema valida que no existan turnos activos en la misma fecha y hora, ignorando citas previamente canceladas.
-- **Soft Delete (Borrado Lógico)**: Las cancelaciones actualizan el estado del turno a `CANCELLED` en lugar de eliminar el registro físicamente, preservando la trazabilidad y auditoría histórica.
+## 🐳 Infraestructura con Docker
+
+La base de datos relacional corre en un contenedor aislado gestionado por **Docker Compose**:
+1. Archivo `docker-compose.yml` configurado para **PostgreSQL 16** (`postgres:16-alpine`).
+2. **Volumen Persistente (`postgres_data`)**: Asegura que los datos no se pierdan al reiniciar o apagar el contenedor.
+3. **Mapeo de Puertos**: Expone el puerto `5432:5432` hacia la máquina host.
+
+Para levantar la infraestructura:
+```bash
+docker compose up -d
+```
 
 ---
 
 ## 🛠️ Tecnologías y Herramientas
 
-- **Lenguaje:** Java 21 (Records, pattern matching, virtual threads ready)
+- **Lenguaje:** Java 21
 - **Framework:** Spring Boot 3.3.4
+- **Seguridad:** Spring Security 6 & JJWT 0.12.5 (JWT)
 - **Persistencia:** Spring Data JPA / Hibernate
-- **Base de Datos:** H2 Database (En memoria para desarrollo y pruebas rápidas)
-- **Manejo de Boilerplate:** Project Lombok (`@Getter`, `@Setter`, `@Builder`, `@RequiredArgsConstructor`)
-- **Validación de Datos:** Spring Boot Starter Validation (`@NotBlank`, `@Email`, `@Future`)
-- **Documentación de API:** SpringDoc OpenAPI 2.5.0 (Swagger UI)
-- **Testing Unitario:** JUnit 5 & Mockito
+- **Base de Datos:** PostgreSQL 16 (Docker) / H2 (Pruebas unitarias)
+- **Manejo de Boilerplate:** Project Lombok
+- **Validación:** Spring Boot Starter Validation (`@Valid`, `@NotBlank`, `@Email`, `@Future`)
+- **Documentación:** SpringDoc OpenAPI 2.5.0 (Swagger UI con botón Authorize JWT)
+- **Testing:** JUnit 5 & Mockito
 
 ---
 
-## 🚀 Instrucciones de Ejecución Local
+## 🚀 Guía de Ejecución y Pruebas
 
-### Prerrequisitos
-- **JDK 21** o superior instalado en tu equipo.
-- **Maven** (o utilizar el wrapper incluido).
-- **Git**.
+### 1. Iniciar la Base de Datos
+```bash
+docker compose up -d
+```
 
-### Pasos para Ejecutar
-1. Clonar el repositorio:
-   ```bash
-   git clone <url-del-repositorio>
-   cd Sistema-citas
-   ```
+### 2. Ejecutar la Aplicación
+```bash
+mvn spring-boot:run
+```
 
-2. Compilar y empaquetar el proyecto con Maven:
-   ```bash
-   mvn clean install
-   ```
+### 3. Probar desde Swagger UI (Recomendado)
+1. Abrir en el navegador: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+2. Usar el endpoint `/api/auth/register` o `/api/auth/login` para obtener un Token JWT.
+3. Hacer clic en el botón **"Authorize"** 🔒 en la parte superior derecha de Swagger UI e introducir el token.
+4. Probar los endpoints de citas protegidos (`/api/appointments/**`).
 
-3. Ejecutar la aplicación Spring Boot:
-   ```bash
-   mvn spring-boot:run
-   ```
+### 4. Probar usando el archivo `scratch.http` en IntelliJ
+Puedes crear un archivo `scratch.http` en tu IDE con peticiones como:
+```http
+### Registrar usuario CLIENT
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
 
-4. **Consola H2 (Base de Datos en Memoria):**
-   - URL: [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
-   - JDBC URL: `jdbc:h2:mem:testdb`
-   - User Name: `sa`
-   - Password: *(en blanco)*
+{
+  "fullName": "Tiziano Desarrollador",
+  "email": "tiziano@portafolio.com",
+  "password": "securepassword",
+  "role": "ROLE_CLIENT"
+}
 
-5. **Documentación Interactiva (Swagger UI):**
-   - URL: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+### Login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "tiziano@portafolio.com",
+  "password": "securepassword"
+}
+```
 
 ---
 
 ## 📖 Documentación de Endpoints (API Reference)
 
-| Método HTTP | Endpoint | Descripción | Código de Respuesta Esperado |
-| :--- | :--- | :--- | :--- |
-| **POST** | `/api/appointments` | Registra una nueva cita validando disponibilidad y fecha futura. | `201 CREATED` (o `400`/`409`) |
-| **GET** | `/api/appointments` | Retorna el listado completo de citas registradas. | `200 OK` |
-| **GET** | `/api/appointments/{id}` | Busca y retorna los detalles de una cita específica por su ID. | `200 OK` (o `404 NOT FOUND`) |
-| **DELETE** | `/api/appointments/{id}` | Cancela lógicamente (*Soft Delete*) una cita existente. | `204 NO_CONTENT` (o `404 NOT FOUND`) |
+| Método HTTP | Endpoint | Descripción | Rol Requerido | Código de Respuesta |
+| :--- | :--- | :--- | :--- | :--- |
+| **POST** | `/api/auth/register` | Registra un nuevo usuario y retorna JWT. | Público | `201 CREATED` |
+| **POST** | `/api/auth/login` | Inicia sesión y retorna JWT. | Público | `200 OK` |
+| **POST** | `/api/appointments` | Crea una nueva cita con validación de solapamiento. | Autenticado (`CLIENT` / `ADMIN`) | `201 CREATED` |
+| **GET** | `/api/appointments` | Lista todas las citas. | Autenticado | `200 OK` |
+| **GET** | `/api/appointments/{id}` | Busca cita por ID. | Autenticado | `200 OK` |
+| **DELETE** | `/api/appointments/{id}` | Cancela lógicamente una cita (*Soft Delete*). | Exclusivo `ROLE_ADMIN` | `204 NO_CONTENT` |
