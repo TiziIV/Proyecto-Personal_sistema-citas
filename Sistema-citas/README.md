@@ -49,16 +49,13 @@
 ## 🖼️ Capturas de Pantalla (UI Preview)
 
 ### 1. Pantalla de Autenticación (Login / Registro)
-> *[Inserta aquí la captura de la pantalla de Login y Registro]*
-`![Login Screen](docs/screenshots/login.png)`
+![Login Screen](docs/screenshots/login.png)
 
 ### 2. Dashboard del Cliente (Agendamiento y Mis Citas)
-> *[Inserta hier la captura del Dashboard del Cliente]*
-`![Client Dashboard](docs/screenshots/client-dashboard.png)`
+![Client Dashboard](docs/screenshots/client-dashboard.png)
 
 ### 3. Panel de Administración (Gestión Global de Turnos)
-> *[Inserta aquí la captura del Panel de Administración]*
-`![Admin Panel](docs/screenshots/admin-panel.png)`
+![Admin Panel](docs/screenshots/admin-panel.png)
 
 ---
 
