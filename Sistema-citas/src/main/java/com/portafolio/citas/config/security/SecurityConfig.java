@@ -11,13 +11,24 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
- * Clase de configuración principal de Spring Security 6 para las reglas de filtrado y autorización HTTP.
+ * Clase de configuración principal de Spring Security 6 para las reglas de filtrado, autorización HTTP y CORS.
  * 
- * Tras la refactorización para evitar dependencias circulares, esta clase solo se encarga 
- * de configurar la cadena de filtros (SecurityFilterChain), inyectando el filtro JWT y el AuthenticationProvider 
- * previamente desacoplados.
+ * ¿Qué es CORS (Cross-Origin Resource Sharing) y por qué es necesario configurarlo?
+ * 1. Definición y el problema de los puertos:
+ *    - CORS es un mecanismo de seguridad implementado por los navegadores web (Same-Origin Policy) 
+ *      que impide que una aplicación frontend ejecutada en un origen (por ejemplo, http://localhost:5173 de Vite/React) 
+ *      realice peticiones HTTP a un servidor backend en otro origen/puerto (por ejemplo, http://localhost:8080).
+ *    - Aunque ambos estén en tu máquina local, los navegadores consideran diferentes puertos como orígenes distintos y bloquean las peticiones por defecto.
+ * 2. Solución con CorsConfigurationSource:
+ *    - Este bean le indica explícitamente a Spring Security qué orígenes, métodos HTTP y cabeceras tienen permiso de comunicarse con la API,
+ *      permitiendo una integración segura y fluida con aplicaciones Frontend modernas (React, Vite, Next.js).
  */
 @Configuration
 @EnableWebSecurity
@@ -28,11 +39,12 @@ public class SecurityConfig {
     private final AuthenticationProvider authenticationProvider;
 
     /**
-     * Configura la cadena de filtros de seguridad (SecurityFilterChain) y las reglas de autorización HTTP.
+     * Configura la cadena de filtros de seguridad (SecurityFilterChain) y las reglas de autorización HTTP y CORS.
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS con la configuración personalizada
             .csrf(AbstractHttpConfigurer::disable) // Deshabilitar CSRF por ser una API REST Stateless basada en JWT
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Sin sesiones en servidor
             .authorizeHttpRequests(auth -> auth
@@ -55,5 +67,31 @@ public class SecurityConfig {
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /**
+     * Define el Bean de configuración CORS para permitir peticiones desde aplicaciones Frontend locales (React / Vite).
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        
+        // Orígenes permitidos (ej. servidores de desarrollo Frontend como Vite 5173 o React 3000)
+        configuration.setAllowedOrigins(List.of("http://localhost:5173", "http://localhost:3000"));
+        
+        // Métodos HTTP permitidos
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        
+        // Cabeceras HTTP permitidas (incluyendo Authorization para enviar el token JWT)
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        
+        // Permitir envío de credenciales o cookies de autenticación si se requiere
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicar esta configuración CORS a todas las rutas de la API (/**)
+        source.registerCorsConfiguration("/**", configuration);
+        
+        return source;
     }
 }
