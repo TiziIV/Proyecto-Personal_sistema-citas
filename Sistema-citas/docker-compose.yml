@@ -1,25 +1,54 @@
 version: '3.8'
 
-# Definición de servicios para la infraestructura del proyecto Sistema-citas
 services:
-  
-  # Contenedor para la base de datos relacional PostgreSQL
+  # Base de datos PostgreSQL
   postgres-db:
-    image: postgres:16-alpine # Imagen oficial ligera de PostgreSQL versión 16
-    container_name: sistema-citas-postgres
+    image: postgres:16-alpine
+    container_name: citas-postgres
     environment:
-      POSTGRES_DB: citasdb             # Nombre de la base de datos que se creará automáticamente al iniciar el contenedor
-      POSTGRES_USER: postgres          # Usuario administrador por defecto para la conexión
-      POSTGRES_PASSWORD: postgrespassword # Contraseña de seguridad para el usuario postgres
+      POSTGRES_DB: citasdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
     ports:
-      - "5433:5432"                    # Mapeo de puertos: expone el puerto 5432 del contenedor hacia el puerto 5432 de la máquina host
+      - "5433:5432" # Expone el puerto 5433 en el host para herramientas de base de datos externas
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Volumen persistente para asegurar que los datos no se pierdan al reiniciar o detener el contenedor
-    restart: unless-stopped            # Política de reinicio: reinicia el contenedor automáticamente si se detiene (a menos que se detenga manualmente)
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - citas-network
+    restart: unless-stopped
 
-# Definición de volúmenes persistentes gestionados por Docker
-# Ventaja de aislar la BD con Docker: Permite replicar exactamente el mismo motor de base de datos de producción en cualquier entorno local,
-# evitando conflictos de versiones de software, facilitando respaldos y manteniendo la máquina limpia.
+  # Servidor Backend (Spring Boot)
+  backend:
+    build: .
+    container_name: citas-backend
+    depends_on:
+      - postgres-db
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/citasdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgrespassword
+    networks:
+      - citas-network
+    restart: unless-stopped
+
+  # Servidor Frontend (React + Nginx)
+  frontend:
+    build: ./frontend
+    container_name: citas-frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80" # Mapea el puerto 80 del Nginx interno al puerto 5173 del host
+    networks:
+      - citas-network
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  citas-network:
+    driver: bridge
