@@ -10,6 +10,7 @@ import com.portafolio.citas.model.entity.User;
 import com.portafolio.citas.model.enums.Role;
 import com.portafolio.citas.repository.AppointmentRepository;
 import com.portafolio.citas.repository.UserRepository;
+import com.portafolio.citas.service.EmailService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -36,6 +38,9 @@ class AppointmentServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private AppointmentServiceImpl appointmentService;
@@ -75,6 +80,7 @@ class AppointmentServiceImplTest {
                 .build();
 
         when(appointmentRepository.save(any(Appointment.class))).thenReturn(savedAppointment);
+        doNothing().when(emailService).sendAppointmentConfirmation(anyString(), anyString(), any(LocalDateTime.class), anyString());
 
         // Act (Cuando)
         AppointmentResponseDTO responseDTO = appointmentService.createAppointment(requestDTO, userEmail);
@@ -87,9 +93,11 @@ class AppointmentServiceImplTest {
         assertEquals(1L, responseDTO.getUserId());
         assertEquals(userEmail, responseDTO.getUserEmail());
 
+        // Verificaciones con Mockito
         verify(userRepository, times(1)).findByEmail(userEmail);
         verify(appointmentRepository, times(1)).existsByAppointmentDateTimeAndStatusNot(any(LocalDateTime.class), eq(AppointmentStatus.CANCELLED));
         verify(appointmentRepository, times(1)).save(any(Appointment.class));
+        verify(emailService, times(1)).sendAppointmentConfirmation(eq(userEmail), eq("Juan Pérez"), eq(futureDateTime), eq("Revisión general"));
     }
 
     @Test
@@ -125,6 +133,7 @@ class AppointmentServiceImplTest {
 
         verify(userRepository, times(1)).findByEmail(userEmail);
         verify(appointmentRepository, never()).save(any(Appointment.class));
+        verifyNoInteractions(emailService);
     }
 
     @Test
@@ -141,6 +150,7 @@ class AppointmentServiceImplTest {
         );
 
         assertTrue(exception.getMessage().contains("No se encontró la cita con el ID: " + nonExistentId));
+        
         verify(appointmentRepository, times(1)).findById(nonExistentId);
     }
 
