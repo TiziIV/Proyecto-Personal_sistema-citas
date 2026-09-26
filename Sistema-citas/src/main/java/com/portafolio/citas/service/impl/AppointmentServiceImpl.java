@@ -10,6 +10,7 @@ import com.portafolio.citas.model.entity.User;
 import com.portafolio.citas.repository.AppointmentRepository;
 import com.portafolio.citas.repository.UserRepository;
 import com.portafolio.citas.service.AppointmentService;
+import com.portafolio.citas.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -70,13 +72,21 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .appointmentDateTime(requestDTO.getAppointmentDateTime())
                 .status(AppointmentStatus.PENDING)
                 .notes(requestDTO.getNotes())
-                .user(user) // Vinculación automática e impedimento de suplantación de identidad
+                .user(user)
                 .build();
 
         // 6. Guardar la entidad en la base de datos
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        // 7. Mapear y retornar el DTO de respuesta
+        // 7. Enviar correo electrónico de confirmación de forma asíncrona (no bloqueante)
+        emailService.sendAppointmentConfirmation(
+                savedAppointment.getClientEmail(),
+                savedAppointment.getClientName(),
+                savedAppointment.getAppointmentDateTime(),
+                savedAppointment.getNotes()
+        );
+
+        // 8. Mapear y retornar el DTO de respuesta
         return mapToResponseDTO(savedAppointment);
     }
 
