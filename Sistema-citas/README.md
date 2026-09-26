@@ -1,4 +1,6 @@
-# Sistema de Reservas y Citas - Full-Stack & DevOps 🩺📅🚀🐳
+﻿[![CI - Sistema de Citas (Backend & Frontend)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml/badge.svg)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml)
+
+# Sistema de Reservas y Citas - Full-Stack & DevOps ðŸ©ºðŸ“…ðŸš€ðŸ³
 
 <p align="center">
   <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
@@ -16,15 +18,15 @@
 
 ---
 
-## 📋 Resumen Ejecutivo
+## ðŸ“‹ Resumen Ejecutivo
 
-**Sistema de Reservas y Citas** es una aplicación empresarial **Full-Stack y Contenerizada** diseñada para la gestión profesional de turnos y reservas. El sistema implementa autenticación Stateless basada en **JSON Web Tokens (JWT)** con **Spring Security 6**, control de acceso basado en roles (**RBAC**), validación de solapamientos en tiempo real y una arquitectura de microservicios locales completamente orquestada con **Docker Compose**.
+**Sistema de Reservas y Citas** es una aplicaciÃ³n empresarial **Full-Stack y Contenerizada** diseÃ±ada para la gestiÃ³n profesional de turnos y reservas. El sistema implementa autenticaciÃ³n Stateless basada en **JSON Web Tokens (JWT)** con **Spring Security 6**, control de acceso basado en roles (**RBAC**), validaciÃ³n de solapamientos en tiempo real y una arquitectura de microservicios locales completamente orquestada con **Docker Compose**.
 
 ---
 
-## 🌐 Diagrama de Arquitectura Contenerizada
+## ðŸŒ Diagrama de Arquitectura Contenerizada
 
-Los servicios se ejecutan de manera aislada y comunicada a través de la red interna de Docker (`citas-network`):
+Los servicios se ejecutan de manera aislada y comunicada a travÃ©s de la red interna de Docker (`citas-network`):
 
 ```text
  +--------------------------------------------------------------------------+
@@ -57,66 +59,67 @@ Los servicios se ejecutan de manera aislada y comunicada a través de la red int
 
 ---
 
-## 🛠️ Tecnologías por Capa
+## ðŸ› ï¸ TecnologÃ­as por Capa
 
-### 🧠 Backend (Spring Boot & Seguridad)
-- **Java 21 & Spring Boot 3.3.4**: Núcleo de la API REST.
-- **Spring Security 6 & JJWT 0.12.5**: Autenticación Stateless y filtros de seguridad con tokens JWT firmados mediante HMAC-SHA256.
+### ðŸ§  Backend (Spring Boot & Seguridad)
+- **Java 21 & Spring Boot 3.3.4**: NÃºcleo de la API REST.
+- **Spring Security 6 & JJWT 0.12.5**: AutenticaciÃ³n Stateless y filtros de seguridad con tokens JWT firmados mediante HMAC-SHA256.
 - **Spring Data JPA & Hibernate**: Persistencia relacional orientada a objetos con `FetchType.LAZY`.
-- **SpringDoc OpenAPI 2.5.0**: Documentación interactiva en Swagger UI con soporte para autenticación Bearer Token.
+- **SpringDoc OpenAPI 2.5.0**: DocumentaciÃ³n interactiva en Swagger UI con soporte para autenticaciÃ³n Bearer Token.
 
-### 🎨 Frontend (React & Estilizado)
+### ðŸŽ¨ Frontend (React & Estilizado)
 - **React & Vite**: Interfaz de usuario Single Page Application (SPA) de alto rendimiento.
-- **Tailwind CSS v4**: Sistema de diseño moderno, limpio y completamente responsivo.
-- **Axios**: Cliente HTTP con interceptores automáticos para inyección de JWT y manejo de errores 401/403.
+- **Tailwind CSS v4**: Sistema de diseÃ±o moderno, limpio y completamente responsivo.
+- **Axios**: Cliente HTTP con interceptores automÃ¡ticos para inyecciÃ³n de JWT y manejo de errores 401/403.
 
-### 🐳 DevOps, Datos & Contenerización
-- **Docker (Multi-stage builds)**: Construcción optimizada en dos etapas (compilación con Maven/Node y ejecución ligera con JRE Alpine / Nginx Alpine).
-- **Docker Compose**: Orquestación automatizada de la infraestructura.
-- **PostgreSQL 16 Alpine**: Motor relacional robusto con persistencia en volúmenes de Docker.
+### ðŸ³ DevOps, Datos & ContenerizaciÃ³n
+- **Docker (Multi-stage builds)**: ConstrucciÃ³n optimizada en dos etapas (compilaciÃ³n con Maven/Node y ejecuciÃ³n ligera con JRE Alpine / Nginx Alpine).
+- **Docker Compose**: OrquestaciÃ³n automatizada de la infraestructura.
+- **PostgreSQL 16 Alpine**: Motor relacional robusto con persistencia en volÃºmenes de Docker.
 
 ---
 
-## 🚀 Guía de Despliegue Rápido (Quickstart)
+## ðŸš€ GuÃ­a de Despliegue RÃ¡pido (Quickstart)
 
-> **Nota:** Gracias a la contenerización completa con Docker, **no necesitas tener instalado Java, Node.js ni PostgreSQL** en tu máquina local para probar la aplicación, tan solo Docker y Docker Compose.
+> **Nota:** Gracias a la contenerizaciÃ³n completa con Docker, **no necesitas tener instalado Java, Node.js ni PostgreSQL** en tu mÃ¡quina local para probar la aplicaciÃ³n, tan solo Docker y Docker Compose.
 
 ### Paso 1: Clonar y Levantar con Docker Compose
-Ejecuta el siguiente comando en la raíz del proyecto para construir las imágenes desde cero y levantar todos los contenedores en segundo plano:
+Ejecuta el siguiente comando en la raÃ­z del proyecto para construir las imÃ¡genes desde cero y levantar todos los contenedores en segundo plano:
 ```bash
 docker compose up --build -d
 ```
 
 ### Paso 2: Acceso a los Servicios
-Una vez que los contenedores estén activos, puedes acceder a:
-- 🖥️ **Frontend (React + Nginx):** [http://localhost:5173](http://localhost:5173)
-- ⚙️ **Backend API REST:** [http://localhost:8080/api](http://localhost:8080/api)
-- 📚 **Documentación Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- 🗄️ **Base de Datos PostgreSQL:** `localhost:5433` (User: `postgres`, Password: `postgrespassword`, DB: `citasdb`)
+Una vez que los contenedores estÃ©n activos, puedes acceder a:
+- ðŸ–¥ï¸ **Frontend (React + Nginx):** [http://localhost:5173](http://localhost:5173)
+- âš™ï¸ **Backend API REST:** [http://localhost:8080/api](http://localhost:8080/api)
+- ðŸ“š **DocumentaciÃ³n Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- ðŸ—„ï¸ **Base de Datos PostgreSQL:** `localhost:5433` (User: `postgres`, Password: `postgrespassword`, DB: `citasdb`)
 
-### Comandos Útiles de Docker Compose:
+### Comandos Ãštiles de Docker Compose:
 - Ver logs en tiempo real: `docker compose logs -f`
 - Detener y apagar contenedores: `docker compose down`
-- Apagar y limpiar volúmenes de datos: `docker compose down -v`
+- Apagar y limpiar volÃºmenes de datos: `docker compose down -v`
 
 ---
 
-## 👥 Matriz de Roles y Endpoints Clave (RBAC)
+## ðŸ‘¥ Matriz de Roles y Endpoints Clave (RBAC)
 
 | Rol | Permisos y Alcance | Endpoints Principales |
 | :--- | :--- | :--- |
-| **`ROLE_CLIENT`** | Registro, inicio de sesión, creación de citas personales con validación de solapamientos y consulta de historial propio. | `POST /api/auth/register`<br>`POST /api/auth/login`<br>`POST /api/appointments`<br>`GET /api/appointments/my-appointments` |
-| **`ROLE_ADMIN`** | Todos los privilegios de cliente, más la visualización global de turnos de todos los usuarios y cancelación lógica (*Soft Delete*). | `GET /api/appointments`<br>`GET /api/appointments/{id}`<br>`DELETE /api/appointments/{id}` |
+| **`ROLE_CLIENT`** | Registro, inicio de sesiÃ³n, creaciÃ³n de citas personales con validaciÃ³n de solapamientos y consulta de historial propio. | `POST /api/auth/register`<br>`POST /api/auth/login`<br>`POST /api/appointments`<br>`GET /api/appointments/my-appointments` |
+| **`ROLE_ADMIN`** | Todos los privilegios de cliente, mÃ¡s la visualizaciÃ³n global de turnos de todos los usuarios y cancelaciÃ³n lÃ³gica (*Soft Delete*). | `GET /api/appointments`<br>`GET /api/appointments/{id}`<br>`DELETE /api/appointments/{id}` |
 
 ---
 
-## 🖼️ Capturas de Pantalla (UI Preview)
+## ðŸ–¼ï¸ Capturas de Pantalla (UI Preview)
 
-### 1. Pantalla de Autenticación (Login / Registro)
+### 1. Pantalla de AutenticaciÃ³n (Login / Registro)
 ![Login Screen](docs/screenshots/login.png)
 
 ### 2. Dashboard del Cliente (Agendamiento y Mis Citas)
 ![Client Dashboard](docs/screenshots/client-dashboard.png)
 
-### 3. Panel de Administración (Gestión Global de Turnos)
+### 3. Panel de AdministraciÃ³n (GestiÃ³n Global de Turnos)
 ![Admin Panel](docs/screenshots/admin-panel.png)
+
