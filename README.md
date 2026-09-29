@@ -118,10 +118,10 @@ docker compose up --build -d
 ## 🖼️ Capturas de Pantalla (UI Preview)
 
 ### 1. Pantalla de Autenticación (Login / Registro)
-![Login Preview](docs/screenshots/login.png)
+![Login Preview](Sistema-citas/docs/screenshots/login.png)
 
 ### 2. Dashboard del Cliente (Agendamiento y Mis Citas)
-![Client Dashboard Preview](docs/screenshots/client-dashboard.png)
+![Client Dashboard Preview](Sistema-citas/docs/screenshots/client-dashboard.png)
 
 ### 3. Panel de Administración (Gestión Global de Turnos)
-![Admin Panel Preview](docs/screenshots/admin-panel.png)
+![Admin Panel Preview](Sistema-citas/docs/screenshots/admin-panel.png)
