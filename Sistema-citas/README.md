@@ -1,6 +1,6 @@
 ﻿[![CI - Sistema de Citas (Backend & Frontend)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml/badge.svg)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml)
 
-# Sistema de Reservas y Citas - Full-Stack DevOps & Async Notifications (v6.0.0) 🩺📅🚀📧🐳
+# Sistema de Reservas y Citas - Full-Stack DevOps & Scheduled Reminders (v7.0.0) 🩺📅🚀📧⏰🐳
 
 <p align="center">
   <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
@@ -13,6 +13,7 @@
   <img src="https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS v4" />
   <img src="https://img.shields.io/badge/Spring%20Security-6-green?style=for-the-badge&logo=springsecurity&logoColor=white" alt="Spring Security 6" />
   <img src="https://img.shields.io/badge/JWT-Stateless-yellow?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT" />
+  <img src="https://img.shields.io/badge/Spring%20Scheduling-%40Scheduled-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Scheduling" />
   <img src="https://img.shields.io/badge/Spring%20Mail-SMTP-red?style=for-the-badge&logo=apachemail&logoColor=white" alt="Spring Mail" />
   <img src="https://img.shields.io/badge/JUnit%205-%26%20Mockito-blue?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit 5 & Mockito" />
   <img src="https://img.shields.io/badge/GitHub%20Actions-CI%2FCD-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions" />
@@ -20,14 +21,15 @@
 
 ---
 
-## 📋 Resumen Ejecutivo y Novedad (Release v6.0.0)
+## 📋 Resumen Ejecutivo y Novedad (Release v7.0.0)
 
 **Sistema de Reservas y Citas** es una aplicación empresarial **Full-Stack, Contenerizada y Asíncrona** diseñada para la gestión profesional de turnos y reservas. 
 
-### 🚀 Novedad Release v6.0.0: Notificaciones por Email Asíncronas
-- **Envío No Bloqueante (`@Async`)**: Se incorporó el envío automatizado de correos electrónicos de confirmación al agendar una cita.
-- **ThreadPool Dedicado (`ThreadPoolTaskExecutor`)**: Configurado con un pool de hilos controlado (2 hilos base, máximo 5, cola de 50) para evitar saturar el servidor y garantizar que el cliente HTTP reciba su respuesta `201 Created` instantáneamente sin sufrir demoras por la latencia externa del servidor SMTP.
-- **Resiliencia Transaccional**: El envío de correos opera en un hilo separado con manejo de excepciones aislado (`try-catch`), asegurando que un fallo temporal del servicio de correo SMTP jamás deshaga o afecte la reserva del turno en la base de datos relacional.
+### ⏰ Novedad Release v7.0.0: Recordatorios Programados Automáticos (`@Scheduled`)
+- **Ejecución Periódica con Cron**: Incorporación del componente `AppointmentReminderScheduler`, habilitado mediante `@EnableScheduling` y configurado mediante la propiedad parametrizable en `application.properties` (`app.scheduling.reminder-cron=0 0 8 * * *`, ejecutándose diariamente a las 08:00 AM).
+- **Consulta Derivada Eficiente**: Utiliza el método de repositorio `findByStatusInAndAppointmentDateTimeBetween` para consultar automáticamente todas las citas con estado `PENDING` o `CONFIRMED` agendadas en la ventana de las próximas 24 horas.
+- **Despacho No Bloqueante**: Itera sobre las citas encontradas y delega el envío de cada notificación al pool de hilos asíncrono `@Async("emailExecutor")` (`EmailService`), asegurando alta disponibilidad, robustez y resiliencia ante fallos SMTP mediante manejo de excepciones aislado.
+- **Cobertura de Pruebas Unitarias**: Suite de tests específica con **JUnit 5** y **Mockito** (`AppointmentReminderSchedulerTest`) validando tanto el escenario de éxito con envío masivo como el escenario sin citas pendientes (`verifyNoInteractions`).
 
 ---
 
@@ -52,7 +54,7 @@ Los servicios se ejecutan de manera aislada y comunicada a través de la red int
  |                         | citas-backend| (Spring Boot 3 - Puerto 8080)   |
  |                         +--------------+                                 |
  |                          /            \                                  |
- |      JDBC (Port 5432)   /              \   SMTP Asíncrono (@Async)       |
+ |      JDBC (Port 5432)   /              \   SMTP / Scheduler (@Scheduled) |
  |                        v                v                                |
  |             +---------------+    +-------------------+                   |
  |             |citas-postgres |    | Mailtrap / SMTP   |                   |
@@ -69,21 +71,21 @@ Los servicios se ejecutan de manera aislada y comunicada a través de la red int
 ## ⚙️ Configuración de Entornos (Local vs Docker)
 
 El sistema utiliza la sintaxis de fallback de Spring Boot `${VARIABLE:valor_por_defecto}` en `application.properties` para alternar sin modificaciones manuales de código entre:
-1. **Desarrollo Local (IntelliJ / Maven):** Conexión a PostgreSQL en `localhost:5433` y servidor SMTP de pruebas (Mailtrap Sandbox en puerto `2525`).
+1. **Desarrollo Local (IntelliJ / Maven):** Conexión a PostgreSQL en `localhost:5433`, servidor SMTP de pruebas (Mailtrap Sandbox en puerto `2525`) y expresión cron parametrizable.
 2. **Entorno Contenerizado (Docker Compose):** Inyección automática de variables de entorno con el hostname interno `postgres-db:5432`.
 
 ---
 
 ## 🧪 Testing y Calidad de Código (CI/CD)
 
-- **Pruebas Unitarias Robustas**: Suite de tests implementada con **JUnit 5** y **Mockito**, aislando repositorios y mockeando `EmailService` (con verificación `verify(..., times(1))` y `verifyNoInteractions(emailService)`).
+- **Pruebas Unitarias Robustas**: Suite de tests implementada con **JUnit 5** y **Mockito** para servicios (`AppointmentServiceImplTest`), repositorios y tareas programadas (`AppointmentReminderSchedulerTest`).
 - **Integración Continua (CI)**: Pipeline automatizado en GitHub Actions (`.github/workflows/ci.yml`) que verifica la compilación de Maven y el build de React ante cada `push` o `pull_request`.
 
 ---
 
 ## 🛠️ Tecnologías por Capa
 
-- **Backend:** Java 21, Spring Boot 3.3.4, Spring Data JPA, Spring Security 6, JJWT 0.12.5 (JWT), Spring Mail, SpringDoc OpenAPI 2.5.0.
+- **Backend:** Java 21, Spring Boot 3.3.4 (con `@EnableScheduling`), Spring Data JPA, Spring Security 6, JJWT 0.12.5 (JWT), Spring Mail, SpringDoc OpenAPI 2.5.0.
 - **Frontend:** React (Vite), Tailwind CSS v4, Axios (Interceptores JWT).
 - **DevOps & Datos:** Docker (Multi-stage builds), Docker Compose, PostgreSQL 16, Nginx Alpine, GitHub Actions.
 
@@ -110,7 +112,7 @@ docker compose up --build -d
 
 | Rol | Alcance y Permisos | Endpoints Principales |
 | :--- | :--- | :--- |
-| **`ROLE_CLIENT`** | Registro, login, creación de citas con validación de solapamientos y notificación asíncrona por email. | `POST /api/auth/register`<br>`POST /api/auth/login`<br>`POST /api/appointments`<br>`GET /api/appointments/my-appointments` |
+| **`ROLE_CLIENT`** | Registro, login, creación de citas con validación de solapamientos, notificación asíncrona inmediata y recordatorios automáticos a 24 horas (`@Scheduled`). | `POST /api/auth/register`<br>`POST /api/auth/login`<br>`POST /api/appointments`<br>`GET /api/appointments/my-appointments` |
 | **`ROLE_ADMIN`** | Privilegios completos, visualización global de citas y cancelación lógica (*Soft Delete*). | `GET /api/appointments`<br>`GET /api/appointments/{id}`<br>`DELETE /api/appointments/{id}` |
 
 ---
