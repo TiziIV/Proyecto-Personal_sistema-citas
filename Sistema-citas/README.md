@@ -1,4 +1,6 @@
-﻿# Sistema de Reservas y Citas - Full-Stack DevOps & Async Notifications (v6.0.0) 🩺📅🚀📧🐳
+﻿[![CI - Sistema de Citas (Backend & Frontend)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml/badge.svg)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml)
+
+# Sistema de Reservas y Citas - Full-Stack DevOps & Async Notifications (v6.0.0) 🩺📅🚀📧🐳
 
 <p align="center">
   <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
