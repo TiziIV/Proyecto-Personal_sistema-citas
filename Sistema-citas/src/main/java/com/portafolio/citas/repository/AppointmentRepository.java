@@ -26,17 +26,15 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     /**
      * Busca citas cuyos estados estén contenidos en la colección proporcionada y 
      * cuya fecha y hora se encuentren dentro de un rango temporal específico.
-     * 
-     * Utilizado principalmente por el programador de tareas (Scheduler) para enviar recordatorios a 24 horas.
-     * 
-     * @param statuses Colección de estados de cita (ej. PENDING, CONFIRMED).
-     * @param start Fecha y hora de inicio del rango.
-     * @param end Fecha y hora de fin del rango.
-     * @return Lista de citas encontradas en la ventana temporal.
      */
     List<Appointment> findByStatusInAndAppointmentDateTimeBetween(
         Collection<AppointmentStatus> statuses,
         LocalDateTime start,
         LocalDateTime end
     );
+
+    /**
+     * Busca citas cuya fecha y hora se encuentren dentro de un rango temporal (ej. un día completo).
+     */
+    List<Appointment> findByAppointmentDateTimeBetween(LocalDateTime start, LocalDateTime end);
 }
