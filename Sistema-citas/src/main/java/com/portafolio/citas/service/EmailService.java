@@ -16,4 +16,14 @@ public interface EmailService {
      * @param notes Notas adicionales de la cita.
      */
     void sendAppointmentConfirmation(String toEmail, String clientName, LocalDateTime dateTime, String notes);
+
+    /**
+     * Envía un correo electrónico de recordatorio de cita próxima al cliente de forma asíncrona.
+     * 
+     * @param toEmail Correo destinatario.
+     * @param clientName Nombre del cliente.
+     * @param dateTime Fecha y hora programada de la cita.
+     * @param notes Notas adicionales de la cita.
+     */
+    void sendAppointmentReminder(String toEmail, String clientName, LocalDateTime dateTime, String notes);
 }
