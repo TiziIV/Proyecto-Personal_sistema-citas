@@ -128,30 +128,30 @@ export default function AppointmentForm({ onAppointmentCreated }) {
   };
 
   return (
-    <div className="bg-gray-800 rounded-3xl p-6 md:p-8 border border-gray-700 shadow-xl text-white space-y-6">
+    <div className="bg-white dark:bg-gray-800/90 border border-slate-200 dark:border-gray-700 text-slate-900 dark:text-white shadow-sm dark:shadow-xl rounded-3xl p-6 md:p-8 space-y-6 transition-colors">
       
       {/* Cabecera Moderna */}
-      <div className="border-b border-gray-700 pb-5">
-        <div className="flex items-center space-x-2 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-1">
+      <div className="border-b border-slate-200 dark:border-gray-700 pb-5">
+        <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-1">
           <CalendarDays className="w-4 h-4" />
           <span>Sistema de Turnos</span>
         </div>
-        <h2 className="text-2xl font-black tracking-tight">Reserva de Turnos Online</h2>
-        <p className="text-gray-400 text-xs sm:text-sm mt-1">
+        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Reserva de Turnos Online</h2>
+        <p className="text-slate-500 dark:text-gray-400 text-xs sm:text-sm mt-1">
           Seleccione el día de su preferencia y el horario disponible que mejor se adapte a su rutina.
         </p>
       </div>
 
       {/* Alertas */}
       {errorMessage && (
-        <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-2xl text-sm flex items-center space-x-2">
+        <div className="bg-red-500/10 border border-red-500 text-red-600 dark:text-red-400 px-4 py-3 rounded-2xl text-sm flex items-center space-x-2">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       {successMessage && (
-        <div className="bg-green-500/10 border border-green-500 text-green-400 px-4 py-3 rounded-2xl text-sm flex items-center space-x-2">
+        <div className="bg-green-500/10 border border-green-500 text-green-600 dark:text-green-400 px-4 py-3 rounded-2xl text-sm flex items-center space-x-2">
           <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
           <span>{successMessage}</span>
         </div>
@@ -161,12 +161,12 @@ export default function AppointmentForm({ onAppointmentCreated }) {
         
         {/* Selector de Días Horizontal Embebido (Day Strip Carousel) */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-3 flex items-center space-x-2">
-            <Calendar className="w-4 h-4 text-indigo-400" />
+          <label className="block text-sm font-semibold text-slate-700 dark:text-gray-300 mb-3 flex items-center space-x-2">
+            <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>Seleccione el Día (Próximos 14 días)</span>
           </label>
           
-          <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin scrollbar-thumb-gray-700 pb-3">
+          <div className="flex overflow-x-auto gap-3 py-2 scrollbar-thin pb-3">
             {daysList.map((item) => {
               const isSelected = selectedDate === item.dateString;
               return (
@@ -176,8 +176,8 @@ export default function AppointmentForm({ onAppointmentCreated }) {
                   onClick={() => setSelectedDate(item.dateString)}
                   className={`flex flex-col items-center justify-center p-3 min-w-[85px] rounded-2xl border transition-all cursor-pointer flex-shrink-0 ${
                     isSelected
-                      ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30 scale-105 border-indigo-500 ring-2 ring-indigo-400/50'
-                      : 'bg-gray-800 hover:bg-gray-700/80 text-gray-300 border-gray-700'
+                      ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30 border border-indigo-500 ring-2 ring-indigo-400/50 scale-105'
+                      : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700/80'
                   }`}
                 >
                   <span className="text-xs uppercase tracking-wider font-semibold opacity-80">{item.shortDay}</span>
@@ -190,27 +190,27 @@ export default function AppointmentForm({ onAppointmentCreated }) {
 
         {/* Selector de Horarios Disponibles (Slots Dinámicos) */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center space-x-2">
-            <Clock className="w-4 h-4 text-indigo-400" />
+          <label className="block text-sm font-semibold text-slate-700 dark:text-gray-300 mb-2 flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <span>Horarios Libres para el {selectedDate}</span>
           </label>
 
           {loadingSlots ? (
-            <div className="bg-gray-900 rounded-2xl p-8 text-center text-gray-400 text-sm border border-gray-700/50">
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-indigo-500 border-t-transparent mb-2"></div>
+            <div className="bg-slate-50 dark:bg-gray-900 rounded-2xl p-8 text-center text-slate-500 dark:text-gray-400 text-sm border border-slate-200 dark:border-gray-700/50">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-indigo-600 dark:border-indigo-500 border-t-transparent mb-2"></div>
               <p>Consultando disponibilidad clínica en tiempo real...</p>
             </div>
           ) : availableSlots.length === 0 ? (
-            <div className="bg-gray-800/80 border border-gray-700 text-gray-400 p-6 rounded-2xl text-center space-y-1">
-              <p className="font-semibold text-amber-300 text-sm">No hay turnos disponibles para esta fecha o el consultorio se encuentra cerrado.</p>
-              <p className="text-xs text-gray-500">Por favor, seleccione otro día en la barra superior.</p>
+            <div className="bg-slate-50 border border-slate-200 text-slate-600 dark:bg-gray-800/80 dark:border-gray-700 dark:text-gray-400 p-6 rounded-2xl text-center space-y-1">
+              <p className="font-semibold text-amber-600 dark:text-amber-300 text-sm">No hay turnos disponibles para esta fecha o el consultorio se encuentra cerrado.</p>
+              <p className="text-xs text-slate-500 dark:text-gray-500">Por favor, seleccione otro día en la barra superior.</p>
             </div>
           ) : (
             <div className="space-y-4 max-h-[260px] overflow-y-auto pr-1">
               {/* Bloque Mañana */}
               {morningSlots.length > 0 && (
                 <div>
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">☀️ Bloque Mañana</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider block mb-2">☀️ Bloque Mañana</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {morningSlots.map((slot) => {
                       const timeFormatted = slot.length === 8 ? slot.slice(0, 5) : slot;
@@ -223,7 +223,7 @@ export default function AppointmentForm({ onAppointmentCreated }) {
                           className={`py-2.5 px-3 rounded-xl text-sm font-mono font-semibold transition-all border cursor-pointer flex items-center justify-center space-x-1.5 ${
                             isSelected
                               ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50 scale-102 font-bold'
-                              : 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-750 hover:border-gray-600'
+                              : 'bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700'
                           }`}
                         >
                           {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
@@ -238,7 +238,7 @@ export default function AppointmentForm({ onAppointmentCreated }) {
               {/* Bloque Tarde */}
               {afternoonSlots.length > 0 && (
                 <div className="pt-2">
-                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">🌙 Bloque Tarde</span>
+                  <span className="text-xs font-bold text-slate-500 dark:text-gray-400 uppercase tracking-wider block mb-2">🌙 Bloque Tarde</span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {afternoonSlots.map((slot) => {
                       const timeFormatted = slot.length === 8 ? slot.slice(0, 5) : slot;
@@ -251,7 +251,7 @@ export default function AppointmentForm({ onAppointmentCreated }) {
                           className={`py-2.5 px-3 rounded-xl text-sm font-mono font-semibold transition-all border cursor-pointer flex items-center justify-center space-x-1.5 ${
                             isSelected
                               ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50 scale-102 font-bold'
-                              : 'bg-gray-900 border-gray-700 text-gray-200 hover:bg-gray-750 hover:border-gray-600'
+                              : 'bg-slate-100 text-slate-800 border border-slate-200 hover:bg-slate-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-700'
                           }`}
                         >
                           {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
@@ -265,7 +265,7 @@ export default function AppointmentForm({ onAppointmentCreated }) {
             </div>
           )}
 
-          <div className="mt-3 text-xs text-indigo-300 bg-indigo-500/10 px-3.5 py-2.5 rounded-xl border border-indigo-500/20 flex items-center space-x-2">
+          <div className="mt-3 text-xs text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-500/10 px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-500/20 flex items-center space-x-2">
             <Sparkles className="w-4 h-4 flex-shrink-0" />
             <span>Protocolo de Atención Segura: Llegar con 10 min de anticipación.</span>
           </div>
@@ -273,25 +273,25 @@ export default function AppointmentForm({ onAppointmentCreated }) {
 
         {/* Motivo de Consulta / Notas */}
         <div>
-          <label className="block text-sm font-semibold text-gray-300 mb-1">Motivo de Consulta u Observaciones</label>
+          <label className="block text-sm font-semibold text-slate-700 dark:text-gray-300 mb-1">Motivo de Consulta u Observaciones</label>
           <textarea
             rows="2"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Describa brevemente el motivo de su visita (opcional)..."
-            className="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 resize-none text-sm"
+            className="w-full bg-slate-50 border border-slate-200 text-slate-900 placeholder:text-slate-400 dark:bg-gray-900/60 dark:border-gray-700 dark:text-white dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-2xl px-4 py-3 resize-none text-sm transition-colors"
           />
         </div>
 
         {/* Tarjeta de Resumen y Botón de Confirmación */}
-        <div className="bg-gray-900 rounded-2xl p-4 border border-gray-700/80 space-y-3">
-          <div className="flex justify-between items-center text-xs text-gray-400">
-            <span>Paciente: <strong className="text-white">{user?.email}</strong></span>
-            <span>Fecha seleccionada: <strong className="text-indigo-400">{selectedDate}</strong></span>
+        <div className="bg-slate-50 border border-slate-200 dark:bg-gray-900/50 dark:border-gray-700/50 text-slate-700 dark:text-gray-300 rounded-2xl p-4 space-y-3 transition-colors">
+          <div className="flex justify-between items-center text-xs text-slate-500 dark:text-gray-400">
+            <span>Paciente: <strong className="text-slate-900 dark:text-white">{user?.email}</strong></span>
+            <span>Fecha seleccionada: <strong className="text-indigo-600 dark:text-indigo-400">{selectedDate}</strong></span>
           </div>
           <div className="flex justify-between items-center text-sm">
-            <span className="text-gray-300 font-medium">Horario elegido:</span>
-            <span className="font-mono font-bold text-green-400">
+            <span className="text-slate-700 dark:text-gray-300 font-medium">Horario elegido:</span>
+            <span className="font-mono font-bold text-green-600 dark:text-green-400">
               {selectedSlot ? selectedSlot.slice(0, 5) : 'Pendiente de selección'}
             </span>
           </div>

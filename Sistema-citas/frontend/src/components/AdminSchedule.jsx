@@ -109,7 +109,7 @@ export default function AdminSchedule() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 text-white">
+    <div className="max-w-7xl mx-auto px-4 py-8 text-slate-800 dark:text-white transition-colors duration-300">
       {/* Toast Notification */}
       {toastMsg && (
         <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 border border-green-500 animate-bounce">
@@ -120,23 +120,23 @@ export default function AdminSchedule() {
 
       {/* Error Banner */}
       {errorMsg && (
-        <div className="bg-red-500/10 border border-red-500 text-red-400 px-6 py-4 rounded-2xl mb-6 flex items-center space-x-3">
+        <div className="bg-red-500/10 border border-red-500 text-red-600 dark:text-red-400 px-6 py-4 rounded-2xl mb-6 flex items-center space-x-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span className="text-sm">{errorMsg}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 bg-gray-800 p-6 rounded-3xl border border-gray-700 shadow-xl">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 bg-white dark:bg-gray-800 p-6 rounded-3xl border border-slate-200 dark:border-gray-700 shadow-xl transition-colors duration-300">
         <div>
-          <div className="flex items-center space-x-2 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-1">
+          <div className="flex items-center space-x-2 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-1">
             <Shield className="w-4 h-4" />
             <span>Panel de Administración</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-800 dark:text-white">
             Configuración de Agenda y Disponibilidad
           </h1>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
             Establezca las franjas horarias y duración de turnos para calcular automáticamente la disponibilidad de los clientes.
           </p>
         </div>
@@ -158,21 +158,21 @@ export default function AdminSchedule() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* PASO 1: Días de Atención */}
-          <div className="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-lg">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-slate-200 dark:border-gray-700 shadow-lg transition-colors duration-300">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold flex items-center space-x-2">
-                <Calendar className="w-5 h-5 text-indigo-400" />
+              <h3 className="text-lg font-bold flex items-center space-x-2 text-slate-800 dark:text-white">
+                <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 <span>Paso 1: Seleccione Días de Atención</span>
               </h3>
               <button
                 type="button"
                 onClick={selectWeekdays}
-                className="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1.5 rounded-xl font-semibold hover:bg-indigo-500/30 transition-all border border-indigo-500/30"
+                className="text-xs bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 px-3 py-1.5 rounded-xl font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-500/30 transition-all border border-indigo-200 dark:border-indigo-500/30 cursor-pointer"
               >
                 Seleccionar Lu-Vi
               </button>
             </div>
-            <p className="text-gray-400 text-sm mb-4">
+            <p className="text-slate-500 dark:text-gray-400 text-sm mb-4">
               Haga clic sobre los días en los que el consultorio o profesional atenderá reservas.
             </p>
 
@@ -187,7 +187,7 @@ export default function AdminSchedule() {
                     className={`flex flex-col items-center justify-center py-4 rounded-2xl border transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50'
-                        : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-white'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-white'
                     }`}
                   >
                     <span className="text-base font-bold">{day.label}</span>
@@ -201,44 +201,44 @@ export default function AdminSchedule() {
           </div>
 
           {/* PASO 2: Jornada Horaria */}
-          <div className="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-lg">
-            <h3 className="text-lg font-bold flex items-center space-x-2 mb-4">
-              <Clock className="w-5 h-5 text-indigo-400" />
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-slate-200 dark:border-gray-700 shadow-lg transition-colors duration-300">
+            <h3 className="text-lg font-bold flex items-center space-x-2 mb-4 text-slate-800 dark:text-white">
+              <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <span>Paso 2: Rango de Horario de Atención</span>
             </h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">
               Defina la hora de apertura y de cierre para los días seleccionados.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Hora de Inicio</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider mb-2">Hora de Inicio</label>
                 <input
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-lg font-mono"
+                  className="w-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:border-indigo-500 text-lg font-mono transition-colors duration-300"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Hora de Fin</label>
+                <label className="block text-xs font-semibold text-slate-600 dark:text-gray-300 uppercase tracking-wider mb-2">Hora de Fin</label>
                 <input
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-2xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-lg font-mono"
+                  className="w-full bg-slate-50 dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-4 py-3 text-slate-800 dark:text-white focus:outline-none focus:border-indigo-500 text-lg font-mono transition-colors duration-300"
                 />
               </div>
             </div>
           </div>
 
           {/* PASO 3: Duración de Turnos (Slots) */}
-          <div className="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-lg">
-            <h3 className="text-lg font-bold flex items-center space-x-2 mb-4">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-slate-200 dark:border-gray-700 shadow-lg transition-colors duration-300">
+            <h3 className="text-lg font-bold flex items-center space-x-2 mb-4 text-slate-800 dark:text-white">
+              <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <span>Paso 3: Duración de cada Turno (Slot)</span>
             </h3>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-slate-500 dark:text-gray-400 text-sm mb-6">
               Seleccione el intervalo de tiempo estándar asignado por cita.
             </p>
 
@@ -253,7 +253,7 @@ export default function AdminSchedule() {
                     className={`py-4 px-4 rounded-2xl border text-center transition-all cursor-pointer ${
                       isSelected
                         ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/30 ring-2 ring-indigo-400/50'
-                        : 'bg-gray-900 border-gray-700 text-gray-400 hover:border-gray-600 hover:text-white'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:text-white'
                     }`}
                   >
                     <span className="text-2xl font-black">{mins}</span>
@@ -270,46 +270,46 @@ export default function AdminSchedule() {
         <div className="space-y-6">
           
           {/* Métricas Estimadas */}
-          <div className="bg-gradient-to-br from-indigo-900/50 to-gray-800 rounded-3xl p-6 border border-indigo-500/30 shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
+          <div className="bg-gradient-to-br from-indigo-50 to-slate-50 dark:from-indigo-900/50 dark:to-gray-800 rounded-3xl p-6 border border-indigo-200 dark:border-indigo-500/30 shadow-xl transition-colors duration-300">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4 flex items-center space-x-2">
+              <Sparkles className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               <span>Simulación de Capacidad</span>
             </h3>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-900/60 p-4 rounded-2xl border border-gray-700/50 text-center">
-                <span className="block text-3xl font-black text-indigo-400">{totalSlotsPerDay}</span>
-                <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Turnos / Día</span>
+              <div className="bg-white dark:bg-gray-900/60 p-4 rounded-2xl border border-slate-200 dark:border-gray-700/50 text-center shadow-sm">
+                <span className="block text-3xl font-black text-indigo-600 dark:text-indigo-400">{totalSlotsPerDay}</span>
+                <span className="text-xs text-slate-500 dark:text-gray-400 font-medium uppercase tracking-wider">Turnos / Día</span>
               </div>
-              <div className="bg-gray-900/60 p-4 rounded-2xl border border-gray-700/50 text-center">
-                <span className="block text-3xl font-black text-purple-400">{estimatedWeeklyCapacity}</span>
-                <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Capacidad Semanal</span>
+              <div className="bg-white dark:bg-gray-900/60 p-4 rounded-2xl border border-slate-200 dark:border-gray-700/50 text-center shadow-sm">
+                <span className="block text-3xl font-black text-purple-600 dark:text-purple-400">{estimatedWeeklyCapacity}</span>
+                <span className="text-xs text-slate-500 dark:text-gray-400 font-medium uppercase tracking-wider">Capacidad Semanal</span>
               </div>
             </div>
 
-            <div className="text-xs text-gray-300 bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 space-y-1">
-              <p className="font-semibold text-indigo-300">💡 Algoritmo de Cálculo Dinámico:</p>
+            <div className="text-xs text-slate-600 dark:text-gray-300 bg-indigo-500/10 p-4 rounded-2xl border border-indigo-500/20 space-y-1">
+              <p className="font-semibold text-indigo-700 dark:text-indigo-300">💡 Algoritmo de Cálculo Dinámico:</p>
               <p>Los clientes visualizarán únicamente los slots teóricos calculados en este rango, descontando en tiempo real las citas ya reservadas o pasadas.</p>
             </div>
           </div>
 
           {/* Reglas Persistidas en Base de Datos */}
-          <div className="bg-gray-800 rounded-3xl p-6 border border-gray-700 shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4">Reglas Guardadas (PostgreSQL)</h3>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 border border-slate-200 dark:border-gray-700 shadow-xl transition-colors duration-300">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Reglas Guardadas (PostgreSQL)</h3>
 
             {rules.length === 0 ? (
-              <p className="text-gray-400 text-sm text-center py-6">No hay reglas de disponibilidad configuradas aún.</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm text-center py-6">No hay reglas de disponibilidad configuradas aún.</p>
             ) : (
               <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
                 {rules.map((rule) => (
-                  <div key={rule.id} className="bg-gray-900 p-4 rounded-2xl border border-gray-700/80 flex justify-between items-center">
+                  <div key={rule.id} className="bg-slate-50 dark:bg-gray-900 p-4 rounded-2xl border border-slate-200 dark:border-gray-700/80 flex justify-between items-center transition-colors duration-300">
                     <div>
-                      <span className="font-bold text-indigo-400 text-sm">{rule.dayOfWeek}</span>
-                      <div className="text-xs text-gray-300 mt-1 font-mono">
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{rule.dayOfWeek}</span>
+                      <div className="text-xs text-slate-600 dark:text-gray-300 mt-1 font-mono">
                         {rule.startTime.slice(0, 5)} - {rule.endTime.slice(0, 5)}
                       </div>
                     </div>
-                    <span className="text-xs px-2.5 py-1 bg-gray-800 text-gray-300 rounded-full border border-gray-700 font-medium">
+                    <span className="text-xs px-2.5 py-1 bg-white dark:bg-gray-800 text-slate-700 dark:text-gray-300 rounded-full border border-slate-200 dark:border-gray-700 font-medium shadow-sm">
                       {rule.slotDurationMinutes} min
                     </span>
                   </div>
