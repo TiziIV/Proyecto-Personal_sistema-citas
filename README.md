@@ -1,6 +1,6 @@
 ﻿[![CI - Sistema de Citas (Backend & Frontend)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml/badge.svg)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml)
 
-# Sistema de Reservas y Citas - Full-Stack DevOps & Scheduled Reminders (v7.0.0) 🩺📅🚀📧⏰🐳
+# Sistema de Reservas y Citas - Full-Stack DevOps & Availability Engine (v8.0.0) 🩺📅🚀📧⏰🐳✨
 
 <p align="center">
   <img src="https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 21" />
@@ -21,15 +21,22 @@
 
 ---
 
-## 📋 Resumen Ejecutivo y Novedad (Release v7.0.0)
+## 📋 Resumen Ejecutivo y Novedad (Release v8.0.0)
 
 **Sistema de Reservas y Citas** es una aplicación empresarial **Full-Stack, Contenerizada y Asíncrona** diseñada para la gestión profesional de turnos y reservas. 
 
-### ⏰ Novedad Release v7.0.0: Recordatorios Programados Automáticos (`@Scheduled`)
-- **Ejecución Periódica con Cron**: Incorporación del componente `AppointmentReminderScheduler`, habilitado mediante `@EnableScheduling` y configurado mediante la propiedad parametrizable en `application.properties` (`app.scheduling.reminder-cron=0 0 8 * * *`, ejecutándose diariamente a las 08:00 AM).
-- **Consulta Derivada Eficiente**: Utiliza el método de repositorio `findByStatusInAndAppointmentDateTimeBetween` para consultar automáticamente todas las citas con estado `PENDING` o `CONFIRMED` agendadas en la ventana de las próximas 24 horas.
-- **Despacho No Bloqueante**: Itera sobre las citas encontradas y delega el envío de cada notificación al pool de hilos asíncrono `@Async("emailExecutor")` (`EmailService`), asegurando alta disponibilidad, robustez y resiliencia ante fallos SMTP mediante manejo de excepciones aislado.
-- **Cobertura de Pruebas Unitarias**: Suite de tests específica con **JUnit 5** y **Mockito** (`AppointmentReminderSchedulerTest`) validando tanto el escenario de éxito con envío masivo como el escenario sin citas pendientes (`verifyNoInteractions`).
+### 📅 Novedad Release v8.0.0: Gestión de Disponibilidad Horaria y Cálculo Algorítmico de Slots
+- **Entidad `Availability` y Repositorio**: Modelado de la disponibilidad de turnos por profesional/administrador, permitiendo definir franjas horarias operativas.
+- **Algoritmo Dinámico de Slots Libres**: Implementado en `AvailabilityServiceImpl`, calcula en tiempo real los turnos disponibles para una fecha dada (`GET /api/availability/slots?date=YYYY-MM-DD`), generando los bloques horarios y restando automáticamente las citas ya reservadas o confirmadas.
+- **Endpoints REST de Disponibilidad**:
+  - `POST /api/availability` (Administrador: Configurar o actualizar disponibilidad).
+  - `GET /api/availability` (Listar disponibilidades configuradas).
+  - `GET /api/availability/slots?date=YYYY-MM-DD` (Obtener franjas horarias libres).
+- **Interfaz Frontend Avanzada en React**:
+  - `AdminSchedule.jsx` para la configuración semanal de turnos y franjas.
+  - `AppointmentForm.jsx` con selector interactivo de días (próximos 14 días) y chips de horarios disponibles clasificados en mañana/tarde.
+  - `Dashboard.jsx` con etiquetas humanas amigables para los roles ("Paciente" y "Administrador") mediante la función auxiliar `getRoleLabel`.
+- **Cobertura de Pruebas Unitarias**: Suite de tests con **JUnit 5** y **Mockito** (`AvailabilityServiceImplTest`) validando la correcta generación y filtrado de turnos.
 
 ---
 
@@ -78,7 +85,7 @@ El sistema utiliza la sintaxis de fallback de Spring Boot `${VARIABLE:valor_por_
 
 ## 🧪 Testing y Calidad de Código (CI/CD)
 
-- **Pruebas Unitarias Robustas**: Suite de tests implementada con **JUnit 5** y **Mockito**, aislando repositorios y mockeando `EmailService` (con verificación `verify(..., times(1))` y `verifyNoInteractions(emailService)`).
+- **Pruebas Unitarias Robustas**: Suite de tests implementada con **JUnit 5** y **Mockito**, aislando repositorios y servicios (`AppointmentServiceImplTest`, `AvailabilityServiceImplTest`, `AppointmentReminderSchedulerTest`).
 - **Integración Continua (CI)**: Pipeline automatizado en GitHub Actions (`.github/workflows/ci.yml`) que verifica la compilación de Maven y el build de React ante cada `push` o `pull_request`.
 
 ---
@@ -86,7 +93,7 @@ El sistema utiliza la sintaxis de fallback de Spring Boot `${VARIABLE:valor_por_
 ## 🛠️ Tecnologías por Capa
 
 - **Backend:** Java 21, Spring Boot 3.3.4, Spring Data JPA, Spring Security 6, JJWT 0.12.5 (JWT), Spring Mail, SpringDoc OpenAPI 2.5.0.
-- **Frontend:** React (Vite), Tailwind CSS v4, Axios (Interceptores JWT).
+- **Frontend:** React (Vite), Tailwind CSS v4, Axios (Interceptores JWT), Lucide React.
 - **DevOps & Datos:** Docker (Multi-stage builds), Docker Compose, PostgreSQL 16, Nginx Alpine, GitHub Actions.
 
 ---
@@ -112,8 +119,8 @@ docker compose up --build -d
 
 | Rol | Alcance y Permisos | Endpoints Principales |
 | :--- | :--- | :--- |
-| **`ROLE_CLIENT`** | Registro, login, creación de citas con validación de solapamientos y notificación asíncrona por email. | `POST /api/auth/register`<br>`POST /api/auth/login`<br>`POST /api/appointments`<br>`GET /api/appointments/my-appointments` |
-| **`ROLE_ADMIN`** | Privilegios completos, visualización global de citas y cancelación lógica (*Soft Delete*). | `GET /api/appointments`<br>`GET /api/appointments/{id}`<br>`DELETE /api/appointments/{id}` |
+| **`ROLE_CLIENT`** ("Paciente") | Registro, login, consulta de slots disponibles en tiempo real, creación de citas con validación de solapamientos y notificación asíncrona por email. | `POST /api/auth/register`<br>`POST /api/auth/login`<br>`GET /api/availability/slots?date=YYYY-MM-DD`<br>`POST /api/appointments`<br>`GET /api/appointments/my-appointments` |
+| **`ROLE_ADMIN`** ("Administrador") | Privilegios completos, configuración de disponibilidad horaria, visualización global de citas y cancelación lógica (*Soft Delete*). | `POST /api/availability`<br>`GET /api/availability`<br>`GET /api/appointments`<br>`GET /api/appointments/{id}`<br>`DELETE /api/appointments/{id}` |
 
 ---
 

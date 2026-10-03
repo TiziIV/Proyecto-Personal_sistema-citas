@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import appointmentService from '../services/appointmentService';
 import AppointmentForm from './AppointmentForm';
+import AdminSchedule from './AdminSchedule';
+import { Calendar, Clock, ClipboardList, Shield, LogOut } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, logout, isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState(isAdmin ? 'schedule' : 'book');
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const fetchAppointments = async () => {
@@ -38,6 +41,12 @@ export default function Dashboard() {
     }
   };
 
+  const getRoleLabel = (role) => {
+    if (role === 'ROLE_ADMIN') return 'Administrador';
+    if (role === 'ROLE_CLIENT') return 'Paciente';
+    return role || 'Usuario';
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'PENDING':
@@ -53,47 +62,130 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      {/* Navbar */}
-      <nav className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center shadow-md">
+      {/* Navbar Superior */}
+      <nav className="bg-gray-800 border-b border-gray-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center shadow-md gap-4">
         <div className="flex items-center space-x-3">
           <span className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
             Sistema de Citas
           </span>
-          <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-medium border border-indigo-500/30">
-            {user?.role}
+          <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-medium border border-indigo-500/30 flex items-center space-x-1">
+            <Shield className="w-3 h-3 mr-1" />
+            {getRoleLabel(user?.role)}
           </span>
         </div>
+
+        {/* Pestañas de Navegación */}
+        <div className="flex bg-gray-900 rounded-2xl p-1.5 border border-gray-700">
+          {isAdmin ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveTab('schedule')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === 'schedule'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Clock className="w-4 h-4" />
+                <span>Gestión de Disponibilidad</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveTab('appointments'); fetchAppointments(); }}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === 'appointments'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <ClipboardList className="w-4 h-4" />
+                <span>Todas las Citas del Sistema</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setActiveTab('book')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === 'book'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Reservar Cita</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setActiveTab('appointments'); fetchAppointments(); }}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                  activeTab === 'appointments'
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <ClipboardList className="w-4 h-4" />
+                <span>Mis Citas Reservadas</span>
+              </button>
+            </>
+          )}
+        </div>
+
         <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-300">{user?.email}</span>
+          <span className="text-sm text-gray-300 hidden md:inline">{user?.email}</span>
           <button
+            type="button"
             onClick={logout}
-            className="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all border border-red-500/30"
+            className="flex items-center space-x-1 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all border border-red-500/30 cursor-pointer"
           >
-            Cerrar Sesión
+            <LogOut className="w-4 h-4" />
+            <span>Salir</span>
           </button>
         </div>
       </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Formulario a la izquierda */}
-          <div className="lg:col-span-1">
-            <AppointmentForm onAppointmentCreated={fetchAppointments} />
+        {activeTab === 'schedule' && isAdmin && (
+          <div className="w-full">
+            <AdminSchedule />
           </div>
+        )}
 
-          {/* Listado de citas a la derecha */}
-          <div className="lg:col-span-2 bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-700">
-            <h3 className="text-xl font-bold text-white mb-6">
-              {isAdmin ? 'Todas las Citas del Sistema' : 'Mis Citas Reservadas'}
-            </h3>
+        {activeTab === 'book' && !isAdmin && (
+            <div className="w-full">
+              <AppointmentForm
+                  onAppointmentCreated={() => {
+                    fetchAppointments();
+                    setActiveTab('appointments');
+                  }}
+              />
+            </div>
+        )}
+
+        {activeTab === 'appointments' && (
+          <div className="w-full bg-gray-800 rounded-3xl shadow-xl p-6 md:p-8 border border-gray-700">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">
+                {isAdmin ? 'Todas las Citas del Sistema' : 'Mis Citas Reservadas'}
+              </h3>
+              <button
+                type="button"
+                onClick={fetchAppointments}
+                className="text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 px-3.5 py-2 rounded-xl transition-all cursor-pointer font-medium"
+              >
+                Actualizar Lista
+              </button>
+            </div>
 
             {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
             {loading ? (
-              <p className="text-gray-400 text-center py-8">Cargando citas...</p>
+              <p className="text-gray-400 text-center py-12">Cargando citas...</p>
             ) : appointments.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">No hay citas registradas.</p>
+              <p className="text-gray-400 text-center py-12">No hay citas registradas.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -109,22 +201,23 @@ export default function Dashboard() {
                   <tbody className="divide-y divide-gray-700/50 text-sm">
                     {appointments.map((apt) => (
                       <tr key={apt.id} className="hover:bg-gray-700/30 transition-all">
-                        <td className="py-3 px-3 font-medium text-white">
-                          <div className="truncate max-w-[140px]" title={apt.clientName}>{apt.clientName}</div>
-                          <div className="text-xs text-gray-400 truncate max-w-[140px]" title={apt.userEmail}>{apt.userEmail}</div>
+                        <td className="py-3.5 px-3 font-medium text-white">
+                          <div className="truncate max-w-[180px]" title={apt.clientName}>{apt.clientName}</div>
+                          <div className="text-xs text-gray-400 truncate max-w-[180px]" title={apt.userEmail}>{apt.userEmail}</div>
                         </td>
-                        <td className="py-3 px-3 text-gray-300 text-xs whitespace-nowrap">
+                        <td className="py-3.5 px-3 text-gray-300 text-xs whitespace-nowrap">
                           {new Date(apt.appointmentDateTime).toLocaleString()}
                         </td>
-                        <td className="py-3 px-3 whitespace-nowrap">{getStatusBadge(apt.status)}</td>
-                        <td className="py-3 px-3 text-gray-400 max-w-[120px] truncate" title={apt.notes || ''}>
+                        <td className="py-3.5 px-3 whitespace-nowrap">{getStatusBadge(apt.status)}</td>
+                        <td className="py-3.5 px-3 text-gray-400 max-w-[200px] truncate" title={apt.notes || ''}>
                           {apt.notes || '-'}
                         </td>
-                        <td className="py-3 px-3 text-right whitespace-nowrap">
+                        <td className="py-3.5 px-3 text-right whitespace-nowrap">
                           {apt.status !== 'CANCELLED' && (isAdmin || apt.userEmail === user?.email) && (
                             <button
+                              type="button"
                               onClick={() => handleCancel(apt.id)}
-                              className="bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-all border border-red-500/20"
+                              className="bg-red-500/10 hover:bg-red-600 text-red-400 hover:text-white px-3 py-1.5 rounded-xl text-xs font-medium transition-all border border-red-500/20 cursor-pointer"
                             >
                               Cancelar
                             </button>
@@ -137,7 +230,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
