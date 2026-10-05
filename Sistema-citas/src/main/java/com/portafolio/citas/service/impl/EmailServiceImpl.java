@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Implementación del servicio de correo electrónico con soporte asíncrono.
+ * Implementación del servicio de correo electrónico con soporte asíncrono y manejo seguro de credenciales vacías.
  * 
  * Anotación @Slf4j: Genera automáticamente un logger de SLF4J para registrar eventos, advertencias y errores.
  */
@@ -27,12 +27,23 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.mail.from:noreply@sistemacitas.com}")
     private String mailFrom;
 
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
+
     /**
      * Envía el correo de confirmación de manera asíncrona utilizando el ThreadPool "emailExecutor".
      */
     @Override
     @Async("emailExecutor")
     public void sendAppointmentConfirmation(String toEmail, String clientName, LocalDateTime dateTime, String notes) {
+        if (mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {
+            log.warn("Servicio de correo no configurado (credenciales de SMTP vacías). Omitiendo envío de correo de confirmación a: {}", toEmail);
+            return;
+        }
+
         try {
             log.info("Iniciando envío asíncrono de correo de confirmación a: {}", toEmail);
 
@@ -58,7 +69,7 @@ public class EmailServiceImpl implements EmailService {
             log.info("Correo de confirmación enviado exitosamente a: {}", toEmail);
 
         } catch (Exception e) {
-            log.error("Error crítico al enviar el correo electrónico de confirmación a {}: {}", toEmail, e.getMessage(), e);
+            log.warn("No se pudo enviar el correo electrónico de confirmación a {} debido a un fallo en el servidor SMTP: {}", toEmail, e.getMessage());
         }
     }
 
@@ -68,6 +79,11 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async("emailExecutor")
     public void sendAppointmentReminder(String toEmail, String clientName, LocalDateTime dateTime, String notes) {
+        if (mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {
+            log.warn("Servicio de correo no configurado (credenciales de SMTP vacías). Omitiendo envío de correo de recordatorio a: {}", toEmail);
+            return;
+        }
+
         try {
             log.info("Iniciando envío asíncrono de correo de recordatorio a: {}", toEmail);
 
@@ -93,7 +109,7 @@ public class EmailServiceImpl implements EmailService {
             log.info("Correo de recordatorio enviado exitosamente a: {}", toEmail);
 
         } catch (Exception e) {
-            log.error("Error crítico al enviar el correo de recordatorio a {}: {}", toEmail, e.getMessage(), e);
+            log.warn("No se pudo enviar el correo de recordatorio a {} debido a un fallo en el servidor SMTP: {}", toEmail, e.getMessage());
         }
     }
 }

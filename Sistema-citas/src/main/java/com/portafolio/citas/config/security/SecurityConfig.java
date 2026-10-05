@@ -51,8 +51,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/availability/slots").permitAll()
                 
                 // Endpoints protegidos de citas y disponibilidad:
-                // DELETE en /api/appointments/** exclusivamente para usuarios con rol ADMIN
-                .requestMatchers(HttpMethod.DELETE, "/api/appointments/**").hasRole("ADMIN")
+                // DELETE en /api/appointments/** permitido a usuarios autenticados (validando propiedad o rol admin en servicio)
+                .requestMatchers(HttpMethod.DELETE, "/api/appointments/**").authenticated()
                 
                 // Cualquier otra petición a /api/appointments/** o /api/availability/** requiere estar autenticado
                 .requestMatchers("/api/appointments/**", "/api/availability/**").authenticated()

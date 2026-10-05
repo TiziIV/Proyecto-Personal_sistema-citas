@@ -43,10 +43,11 @@ public interface AppointmentService {
     AppointmentResponseDTO getAppointmentById(Long id);
 
     /**
-     * Cancela una cita existente cambiando su estado a CANCELLED (Soft Delete).
+     * Cancela una cita existente cambiando su estado a CANCELLED (Soft Delete), validando la propiedad del recurso o rol de administrador.
      * 
      * @param id Identificador de la cita a cancelar.
+     * @param userEmail Email del usuario autenticado que solicita la cancelación.
      * @return AppointmentResponseDTO con la cita actualizada.
      */
-    AppointmentResponseDTO cancelAppointment(Long id);
+    AppointmentResponseDTO cancelAppointment(Long id, String userEmail);
 }

@@ -7,11 +7,13 @@ import com.portafolio.citas.exception.ResourceNotFoundException;
 import com.portafolio.citas.model.entity.Appointment;
 import com.portafolio.citas.model.entity.AppointmentStatus;
 import com.portafolio.citas.model.entity.User;
+import com.portafolio.citas.model.enums.Role;
 import com.portafolio.citas.repository.AppointmentRepository;
 import com.portafolio.citas.repository.UserRepository;
 import com.portafolio.citas.service.AppointmentService;
 import com.portafolio.citas.service.EmailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,16 +122,31 @@ public class AppointmentServiceImpl implements AppointmentService {
 
     @Override
     @Transactional
-    public AppointmentResponseDTO cancelAppointment(Long id) {
+    public AppointmentResponseDTO cancelAppointment(Long id, String userEmail) {
+        // 1. Buscar al usuario autenticado para verificar roles y permisos
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario autenticado no encontrado: " + userEmail));
+
+        // 2. Buscar la cita por ID
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No se encontró la cita con el ID para cancelar: " + id));
 
+        // 3. Validar si la cita ya está cancelada
         if (appointment.getStatus() == AppointmentStatus.CANCELLED) {
             throw new IllegalStateException("La cita ya se encuentra cancelada.");
         }
 
+        // 4. Validación de propiedad de recurso (RBAC / Ownership):
+        // Si el usuario no es ADMIN y la cita no pertenece al usuario autenticado, denegar acceso.
+        boolean isAdmin = user.getRole() == Role.ROLE_ADMIN;
+        boolean isOwner = appointment.getUser() != null && appointment.getUser().getEmail().equals(userEmail);
+
+        if (!isAdmin && !isOwner) {
+            throw new AccessDeniedException("No tiene permisos para cancelar una cita ajena.");
+        }
+
+        // 5. Soft Delete: cambiar el estado a CANCELLED y persistir
         appointment.setStatus(AppointmentStatus.CANCELLED);
-        
         Appointment updatedAppointment = appointmentRepository.save(appointment);
 
         return mapToResponseDTO(updatedAppointment);

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -155,31 +156,136 @@ class AppointmentServiceImplTest {
     }
 
     @Test
-    @DisplayName("cancelAppointment_Success: Debe buscar la cita, cambiar su estado a CANCELLED y guardarla")
-    void cancelAppointment_Success() {
+    @DisplayName("cancelAppointment_Success_WhenOwner: Debe permitir al propietario cancelar su propia cita")
+    void cancelAppointment_Success_WhenOwner() {
         // Arrange (Dado)
         Long appointmentId = 1L;
-        User mockUser = User.builder().id(1L).email("carlos@example.com").build();
+        String userEmail = "carlos@example.com";
+        User mockUser = User.builder().id(1L).email(userEmail).role(Role.ROLE_CLIENT).build();
         Appointment existingAppointment = Appointment.builder()
                 .id(appointmentId)
                 .clientName("Carlos Ruiz")
-                .clientEmail("carlos@example.com")
+                .clientEmail(userEmail)
                 .appointmentDateTime(LocalDateTime.now().plusDays(2))
                 .status(AppointmentStatus.PENDING)
                 .user(mockUser)
                 .build();
 
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act (Cuando)
-        AppointmentResponseDTO responseDTO = appointmentService.cancelAppointment(appointmentId);
+        AppointmentResponseDTO responseDTO = appointmentService.cancelAppointment(appointmentId, userEmail);
 
         // Assert (Entonces)
         assertNotNull(responseDTO);
         assertEquals(AppointmentStatus.CANCELLED, responseDTO.getStatus());
 
+        verify(userRepository, times(1)).findByEmail(userEmail);
         verify(appointmentRepository, times(1)).findById(appointmentId);
         verify(appointmentRepository, times(1)).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("cancelAppointment_Success_WhenAdmin: Debe permitir al administrador cancelar cualquier cita")
+    void cancelAppointment_Success_WhenAdmin() {
+        // Arrange (Dado)
+        Long appointmentId = 1L;
+        String adminEmail = "admin@example.com";
+        String clientEmail = "client@example.com";
+        User adminUser = User.builder().id(2L).email(adminEmail).role(Role.ROLE_ADMIN).build();
+        User clientUser = User.builder().id(1L).email(clientEmail).role(Role.ROLE_CLIENT).build();
+        
+        Appointment existingAppointment = Appointment.builder()
+                .id(appointmentId)
+                .clientName("Cliente Test")
+                .clientEmail(clientEmail)
+                .appointmentDateTime(LocalDateTime.now().plusDays(2))
+                .status(AppointmentStatus.PENDING)
+                .user(clientUser)
+                .build();
+
+        when(userRepository.findByEmail(adminEmail)).thenReturn(Optional.of(adminUser));
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act (Cuando)
+        AppointmentResponseDTO responseDTO = appointmentService.cancelAppointment(appointmentId, adminEmail);
+
+        // Assert (Entonces)
+        assertNotNull(responseDTO);
+        assertEquals(AppointmentStatus.CANCELLED, responseDTO.getStatus());
+
+        verify(userRepository, times(1)).findByEmail(adminEmail);
+        verify(appointmentRepository, times(1)).findById(appointmentId);
+        verify(appointmentRepository, times(1)).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("cancelAppointment_ThrowsAccessDenied_WhenNotOwnerAndNotAdmin: Debe lanzar AccessDeniedException si un cliente intenta cancelar una cita ajena")
+    void cancelAppointment_ThrowsAccessDenied_WhenNotOwnerAndNotAdmin() {
+        // Arrange (Dado)
+        Long appointmentId = 1L;
+        String attackerEmail = "attacker@example.com";
+        String ownerEmail = "owner@example.com";
+        User attackerUser = User.builder().id(2L).email(attackerEmail).role(Role.ROLE_CLIENT).build();
+        User ownerUser = User.builder().id(1L).email(ownerEmail).role(Role.ROLE_CLIENT).build();
+        
+        Appointment existingAppointment = Appointment.builder()
+                .id(appointmentId)
+                .clientName("Dueño Cita")
+                .clientEmail(ownerEmail)
+                .appointmentDateTime(LocalDateTime.now().plusDays(2))
+                .status(AppointmentStatus.PENDING)
+                .user(ownerUser)
+                .build();
+
+        when(userRepository.findByEmail(attackerEmail)).thenReturn(Optional.of(attackerUser));
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
+
+        // Act & Assert (Cuando / Entonces)
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> appointmentService.cancelAppointment(appointmentId, attackerEmail)
+        );
+
+        assertTrue(exception.getMessage().contains("No tiene permisos para cancelar una cita ajena"));
+
+        verify(userRepository, times(1)).findByEmail(attackerEmail);
+        verify(appointmentRepository, times(1)).findById(appointmentId);
+        verify(appointmentRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("cancelAppointment_ThrowsIllegalStateException_WhenAlreadyCancelled: Debe lanzar IllegalStateException si la cita ya está cancelada")
+    void cancelAppointment_ThrowsIllegalStateException_WhenAlreadyCancelled() {
+        // Arrange (Dado)
+        Long appointmentId = 1L;
+        String userEmail = "carlos@example.com";
+        User mockUser = User.builder().id(1L).email(userEmail).role(Role.ROLE_CLIENT).build();
+        Appointment existingAppointment = Appointment.builder()
+                .id(appointmentId)
+                .clientName("Carlos Ruiz")
+                .clientEmail(userEmail)
+                .appointmentDateTime(LocalDateTime.now().plusDays(2))
+                .status(AppointmentStatus.CANCELLED)
+                .user(mockUser)
+                .build();
+
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(mockUser));
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(existingAppointment));
+
+        // Act & Assert (Cuando / Entonces)
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> appointmentService.cancelAppointment(appointmentId, userEmail)
+        );
+
+        assertTrue(exception.getMessage().contains("La cita ya se encuentra cancelada"));
+
+        verify(userRepository, times(1)).findByEmail(userEmail);
+        verify(appointmentRepository, times(1)).findById(appointmentId);
+        verify(appointmentRepository, never()).save(any(Appointment.class));
     }
 }

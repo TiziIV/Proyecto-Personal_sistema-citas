@@ -74,15 +74,17 @@ public class AppointmentController {
         return ResponseEntity.ok(appointment);
     }
 
-    @Operation(summary = "Cancelar una cita", description = "Actualiza el estado de una cita existente a CANCELLED (Soft Delete) liberando su horario.")
+    @Operation(summary = "Cancelar una cita", description = "Actualiza el estado de una cita existente a CANCELLED (Soft Delete) validando propiedad o rol administrador.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Cita cancelada exitosamente (sin contenido de respuesta)"),
+        @ApiResponse(responseCode = "403", description = "Acceso denegado (no es propietario ni administrador)"),
         @ApiResponse(responseCode = "404", description = "Cita no encontrada con el ID proporcionado"),
         @ApiResponse(responseCode = "400", description = "Cita ya cancelada o ID inválido")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelAppointment(@PathVariable Long id) {
-        appointmentService.cancelAppointment(id);
+    public ResponseEntity<Void> cancelAppointment(@PathVariable Long id, Authentication authentication) {
+        String userEmail = authentication.getName();
+        appointmentService.cancelAppointment(id, userEmail);
         return ResponseEntity.noContent().build();
     }
 }
