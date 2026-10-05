@@ -1,4 +1,4 @@
-﻿[![CI - Sistema de Citas (Backend & Frontend)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml/badge.svg)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml)
+[![CI - Sistema de Citas (Backend & Frontend)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml/badge.svg)](https://github.com/TiziIV/Proyecto-Personal_sistema-citas/actions/workflows/ci.yml)
 
 # Sistema de Reservas y Citas - Cloud Full-Stack DevOps & Availability Engine (v8.0.0) 🩺📅🚀📧⏰🐳☁️
 
@@ -19,7 +19,7 @@
 
 ## 🚀 Live Demo & Cloud Deployment (Producción en la Nube)
 
-El sistema se encuentra **100% desplegado, operativo y accesible** en la nube con arquitectura serverless y contenerizada:
+El sistema se encuentra **100% desplegado, operativo y accesible** en la nube:
 - 🖥️ **Frontend en Vivo (Vercel):** [https://sistema-citas-navy.vercel.app](https://sistema-citas-navy.vercel.app)
 - ⚙️ **Backend API & Swagger UI (Render):** [https://proyecto-personal-sistema-citas.onrender.com/swagger-ui/index.html](https://proyecto-personal-sistema-citas.onrender.com/swagger-ui/index.html)
 - 🗄️ **Base de Datos Cloud (Neon.tech):** PostgreSQL 16 Serverless (Región `us-east-2`)
@@ -28,13 +28,13 @@ El sistema se encuentra **100% desplegado, operativo y accesible** en la nube co
 
 ## 📋 Resumen Ejecutivo y Arquitectura Cloud (Release v8.0.0)
 
-**Sistema de Reservas y Citas** es una aplicación empresarial **Full-Stack Cloud-Native** diseñada para la gestión profesional de turnos y reservas con autenticación stateless JWT, notificaciones asíncronas, motor algorítmico de disponibilidad y control de acceso basado en roles (RBAC) con validación estricta de propiedad de recursos.
+**Sistema de Reservas y Citas** es una aplicación empresarial **Full-Stack Cloud-Native** diseñada para la gestión profesional de turnos y reservas.
 
-### ✨ Características Clave de la Release v8.0.0:
-- **Despliegue Multi-Cloud**: SPA en React desplegada en **Vercel**, API REST en Spring Boot empaquetada en contenedor Docker y corriendo en **Render**, conectada a una base de datos PostgreSQL 16 serverless en **Neon.tech**.
-- **Gestión Dinámica de Disponibilidad y Slots**: Configuración de horarios por administrador y cálculo algorítmico en tiempo real de turnos libres (`GET /api/availability/slots?date=YYYY-MM-DD`).
-- **Seguridad RBAC y Validación de Propiedad**: Tanto administradores como pacientes pueden cancelar citas (Soft Delete seguro). Los pacientes solo pueden cancelar sus propias citas (validación de propiedad de recurso), mientras que los administradores tienen acceso global.
-- **UI/UX Dual-Theme (Dark/Light)**: Interfaz construida con React 19 y Tailwind CSS v4 con selector interactivo de modo claro y oscuro, Day Strip de 14 días y chips de horarios.
+### ✨ Características Clave:
+- **Cloud Hosting**: Vercel (Frontend React SPA) + Render (Backend Spring Boot en Docker) + Neon.tech (PostgreSQL Serverless).
+- **Disponibilidad Dinámica**: Algoritmo en `AvailabilityServiceImpl` para calcular turnos libres en tiempo real (`GET /api/availability/slots?date=YYYY-MM-DD`).
+- **Seguridad RBAC y Propiedad de Recursos**: Cancelación segura de citas (Soft Delete) disponible para administradores (global) y pacientes (validando propiedad del recurso).
+- **Notificaciones y Recordatorios**: Envío asíncrono con Java Mail y recordatorios automáticos a 24 horas mediante `@Scheduled`.
 
 ---
 
@@ -72,10 +72,10 @@ El sistema se encuentra **100% desplegado, operativo y accesible** en la nube co
 ## 🖼️ Capturas de Pantalla (UI Preview)
 
 ### 1. Pantalla de Autenticación (Login / Registro)
-![Login Preview](Sistema-citas/docs/screenshots/login.png)
+![Login Preview](docs/screenshots/login.png)
 
 ### 2. Dashboard del Cliente (Agendamiento y Mis Citas)
-![Client Dashboard Preview](Sistema-citas/docs/screenshots/client-dashboard.png)
+![Client Dashboard Preview](docs/screenshots/client-dashboard.png)
 
 ### 3. Panel de Administración (Gestión Global de Turnos)
-![Admin Panel Preview](Sistema-citas/docs/screenshots/admin-panel.png)
+![Admin Panel Preview](docs/screenshots/admin-panel.png)
